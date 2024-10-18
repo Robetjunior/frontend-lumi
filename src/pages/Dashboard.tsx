@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
-import { fetchInvoices } from '../services/api'; // Importando a função para buscar faturas
+import { fetchInvoices } from '../services/api';
 
 // Definir os tipos de dados
 interface Invoice {
@@ -20,13 +20,14 @@ interface GroupedData {
   totalCompensada: number;
   totalFinance: number;
   totalEconomia: number;
+  gastoMaiorQueEconomia?: boolean;
 }
 
 const Dashboard = () => {
   const [energyData, setEnergyData] = useState<GroupedData[]>([]);
   const [financialData, setFinancialData] = useState<GroupedData[]>([]);
-  const [availableYears, setAvailableYears] = useState<string[]>([]); // Anos disponíveis
-  const [selectedYear, setSelectedYear] = useState<string>('2024'); // Ano selecionado
+  const [availableYears, setAvailableYears] = useState<string[]>([]);
+  const [selectedYear, setSelectedYear] = useState<string>('2024');
 
   // Função para converter o nome do mês para número
   const monthToNumber = useCallback((month: string): number => {
@@ -40,24 +41,36 @@ const Dashboard = () => {
   // Função para agrupar os dados por ano e mês
   const groupDataByYear = useCallback((invoices: Invoice[], year: string): GroupedData[] => {
     const groupedData: { [key: string]: GroupedData } = {};
-  
+
     invoices.forEach(invoice => {
       const [month, invoiceYear] = invoice.mes_referencia.split('/');
-  
+
       // Filtrar apenas o ano selecionado
       if (invoiceYear === year) {
         const key = `${invoiceYear}-${month}`;
-  
+
         if (!groupedData[key]) {
-          groupedData[key] = { name: key, totalKwh: 0, totalCompensada: 0, totalFinance: 0, totalEconomia: 0 };
+          groupedData[key] = { name: key, totalKwh: 0, totalCompensada: 0, totalFinance: 0, totalEconomia: 0, gastoMaiorQueEconomia: false };
         }
-  
-        // Adicionar valores e formatar com duas casas decimais
+
+        // Consumo de Energia Elétrica = energia_eletrica_kwh + energia_sceee_kwh
         groupedData[key].totalKwh += Number(invoice.energia_eletrica_kwh || 0) + Number(invoice.energia_sceee_kwh || 0);
+
+        // Energia Compensada = energia_compensada_kwh
         groupedData[key].totalCompensada += Number(invoice.energia_compensada_kwh || 0);
+
+        // Valor Total sem GD = energia_eletrica_valor + energia_sceee_valor + contrib_ilum_publica
         groupedData[key].totalFinance += Number(invoice.energia_eletrica_valor || 0) + Number(invoice.energia_sceee_valor || 0) + Number(invoice.contrib_ilum_publica || 0);
-        groupedData[key].totalEconomia += Number(invoice.energia_compensada_valor || 0);
-  
+
+        // Economia GD = valor absoluto da energia_compensada_valor
+        const economiaGD = Number(invoice.energia_compensada_valor || 0);
+        groupedData[key].totalEconomia += Math.abs(economiaGD);
+
+        // Verificar se o gasto total é maior do que a economia gerada
+        if (economiaGD < 0) {
+          groupedData[key].gastoMaiorQueEconomia = true;
+        }
+
         // Aplicar toFixed(2) para garantir que as casas decimais sejam sempre mostradas
         groupedData[key].totalKwh = parseFloat(groupedData[key].totalKwh.toFixed(2));
         groupedData[key].totalCompensada = parseFloat(groupedData[key].totalCompensada.toFixed(2));
@@ -65,20 +78,18 @@ const Dashboard = () => {
         groupedData[key].totalEconomia = parseFloat(groupedData[key].totalEconomia.toFixed(2));
       }
     });
-  
+
     return Object.values(groupedData).sort((a, b) => monthToNumber(a.name.split('-')[1]) - monthToNumber(b.name.split('-')[1]));
   }, [monthToNumber]);
 
   useEffect(() => {
     fetchInvoices().then(response => {
-      console.log(response.data);
-
       const invoices: Invoice[] = response.data;
 
       // Extrair os anos disponíveis para o seletor de ano
       const years = Array.from(new Set(invoices.map(invoice => invoice.mes_referencia.split('/')[1])));
       setAvailableYears(years);
-      console.log(years)
+
       // Agrupar dados para o ano selecionado
       const groupedEnergyData = groupDataByYear(invoices, selectedYear);
       const groupedFinancialData = groupDataByYear(invoices, selectedYear);
@@ -89,11 +100,26 @@ const Dashboard = () => {
     });
   }, [selectedYear, groupDataByYear]);
 
+  // Função para formatar os valores no Tooltip
+  const tooltipFormatter = (value: number, name: string) => {
+    switch (name) {
+      case 'totalKwh':
+        return `${value} kWh`;  // Adicionar unidade de medida kWh
+      case 'totalCompensada':
+        return `${value} kWh`;  // Adicionar unidade de medida kWh
+      case 'totalFinance':
+        return `R$ ${value.toFixed(2)}`;  // Adicionar unidade monetária R$
+      case 'totalEconomia':
+        return `R$ ${value.toFixed(2)}`;  // Adicionar unidade monetária R$
+      default:
+        return value;
+    }
+  };
+
   return (
-    <div>
+    <div className="dashboard-container">
       <h2>Dashboard</h2>
 
-      {/* Seletor de Ano */}
       <div>
         <label>Selecionar Ano:</label>
         <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>
@@ -109,10 +135,15 @@ const Dashboard = () => {
           <LineChart data={energyData}>
             <XAxis dataKey="name" tickFormatter={(value) => value.split('-')[1]} />
             <YAxis />
-            <Tooltip />
-            <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
-            <Line type="monotone" dataKey="totalKwh" stroke="#8884d8" />
-            <Line type="monotone" dataKey="totalCompensada" stroke="#82ca9d" />
+            <Tooltip 
+              contentStyle={{ backgroundColor: '#fff', color: '#000' }}
+              labelStyle={{ color: '#000' }}
+              itemStyle={{ color: '#007BFF' }}
+              formatter={tooltipFormatter}  // Usar a função de formatação do Tooltip
+            />
+            <CartesianGrid stroke="#00362b" strokeDasharray="3 3" />
+            <Line type="monotone" dataKey="totalKwh" stroke="#00ad75" strokeWidth={2} />
+            <Line type="monotone" dataKey="totalCompensada" stroke="#FF6347" strokeWidth={2} />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -123,10 +154,15 @@ const Dashboard = () => {
           <LineChart data={financialData}>
             <XAxis dataKey="name" tickFormatter={(value) => value.split('-')[1]} />
             <YAxis />
-            <Tooltip />
-            <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
-            <Line type="monotone" dataKey="totalFinance" stroke="#8884d8" />
-            <Line type="monotone" dataKey="totalEconomia" stroke="#82ca9d" />
+            <Tooltip 
+              contentStyle={{ backgroundColor: '#fff', color: '#000' }}
+              labelStyle={{ color: '#000' }}
+              itemStyle={{ color: '#007BFF' }}
+              formatter={tooltipFormatter}  // Usar a função de formatação do Tooltip
+            />
+            <CartesianGrid stroke="#00362b" strokeDasharray="3 3" />
+            <Line type="monotone" dataKey="totalFinance" stroke="#00ad75" strokeWidth={2} />
+            <Line type="monotone" dataKey="totalEconomia" stroke="#FF6347" strokeWidth={2} />
           </LineChart>
         </ResponsiveContainer>
       </div>

@@ -1,0 +1,178 @@
+/* Reset básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Variáveis CSS para paleta de cores */
+:root {
+    --main-bg-color: #00362b; /* Dark Green */
+    --highlight-color: #00ad75; /* Light Green */
+    --secondary-highlight-color: #00c382; /* Lighter Green */
+    --text-color: #f0f8f0; /* Off-white */
+    --sidebar-bg-color: #022e25; /* Darker Green */
+    --cta-button-color: #005e4d; /* Button Green */
+}
+
+/* Estilos gerais */
+body {
+    background-color: var(--main-bg-color);
+    color: var(--text-color);
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 10px; /* Reduzindo padding */
+}
+
+/* Contêiner principal */
+.app-container {
+    display: flex;
+    flex-direction: row; /* Sidebar e conteúdo lado a lado */
+}
+
+/* Sidebar */
+.sidebar {
+  width: 220px; /* Largura fixa para a sidebar */
+  padding: 15px;
+  height: 100vh; /* Ocupa toda a altura da tela */
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: var(--sidebar-bg-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Estilos para o logo */
+.logo {
+    width: 150px; /* Tamanho ajustado do logo */
+    height: auto; /* Manter a proporção */
+    margin-bottom: 20px; /* Espaçamento abaixo do logo */
+}
+
+/* Contêiner de conteúdo */
+.content {
+    margin-left: 220px; /* Margem para não sobrepor a sidebar */
+    padding: 20px;
+    width: calc(100% - 220px); /* O conteúdo ocupará o restante da tela */
+}
+
+/* Estilos de cabeçalhos */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-color);
+    font-family: 'Poppins', sans-serif;
+}
+
+h2 {
+    color: #00362b;
+}
+
+/* Estilização de links */
+a {
+    color: var(--highlight-color);
+    text-decoration: none;
+    font-family: 'Poppins', sans-serif;
+}
+
+a:hover {
+    color: var(--secondary-highlight-color);
+}
+
+/* Botões */
+button {
+    background-color: var(--cta-button-color);
+    color: var(--text-color);
+    font-family: 'Poppins', sans-serif;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: var(--highlight-color);
+}
+
+/* Contêiner dos gráficos */
+.chart-container {
+    background-color: var(--sidebar-bg-color);
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin-bottom: 40px; /* Espaçamento abaixo dos gráficos */
+}
+
+/* Campos de input e select */
+input, select {
+    background-color: var(--sidebar-bg-color);
+    color: var(--text-color);
+    font-family: 'Poppins', sans-serif;
+    border: 1px solid var(--highlight-color);
+    padding: 8px;
+    border-radius: 5px;
+}
+
+/* Rodapé */
+footer {
+    background-color: var(--main-bg-color);
+    color: var(--text-color);
+    text-align: center;
+    padding: 20px;
+    font-family: 'Poppins', sans-serif;
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+}
+
+/* Ajustes de layout para telas menores */
+@media (max-width: 1080px) {
+    html {
+      font-size: 93.75%;
+    }
+
+    .sidebar {
+        width: 180px;
+    }
+
+    .content {
+        margin-left: 180px;
+        width: calc(100% - 180px);
+    }
+}
+
+@media (max-width: 720px) {
+    html {
+      font-size: 87.5%;
+    }
+
+    .sidebar {
+        width: 150px;
+    }
+
+    .content {
+        margin-left: 150px;
+        width: calc(100% - 150px);
+    }
+
+    .logo {
+        width: 100px; /* Reduzindo o tamanho do logo em telas menores */
+    }
+}
+
+/* Adiciona espaçamento abaixo dos gráficos */
+.chart-container {
+    margin-bottom: 40px;
+}
+
+/* Estilo para dashboard container */
+.dashboard-container {
+    padding-top: -30px; /* Diminuindo o espaçamento do topo */
+}
+
+/* Adiciona espaçamento interno na lateral */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px; /* Adicionando espaçamento nas laterais */
+}
