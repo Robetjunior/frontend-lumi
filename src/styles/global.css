@@ -21,7 +21,7 @@ body {
     color: var(--text-color);
     font-family: 'Poppins', sans-serif;
     margin: 0;
-    padding: 10px; /* Reduzindo padding */
+    padding: 0; /* Sem padding no body */
 }
 
 /* Contêiner principal */
@@ -42,6 +42,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    z-index: 100; /* Mantém a sidebar acima de outros elementos */
 }
 
 /* Estilos para o logo */
@@ -53,9 +54,71 @@ body {
 
 /* Contêiner de conteúdo */
 .content {
-    margin-left: 50px; /* O espaçamento padrão da sidebar */
+    margin-left: 220px; /* Espaçamento da sidebar */
     padding: 20px;
     width: calc(100% - 220px); /* Expandir o conteúdo com base no espaço disponível */
+}
+
+.invoices-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.invoices-table th,
+.invoices-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--text-color);
+    text-align: left;
+}
+
+.invoices-table th {
+    background-color: var(--sidebar-bg-color);
+    color: var(--text-color);
+    text-transform: uppercase;
+    font-size: 0.9rem;
+}
+
+.invoices-table td {
+    background-color: #004c40;
+    color: var(--text-color);
+    font-size: 0.85rem;
+}
+
+/* Filtros */
+.filters {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.filters input {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid var(--highlight-color);
+    background-color: #004c40;
+    color: var(--text-color);
+    width: 200px;
+}
+
+.filters input::placeholder {
+    color: #a3c6c1;
+}
+
+/* Botões de ano */
+.years button {
+    background-color: #004c40;
+    color: var(--text-color);
+    border: 1px solid var(--highlight-color);
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+.years button:hover {
+    background-color: var(--highlight-color);
 }
 
 /* Estilos de cabeçalhos */
@@ -214,6 +277,21 @@ footer {
 }
 
 @media (max-width: 768px) {
+    .content {
+        margin-left: 0; /* Remove margem da sidebar */
+        width: 100%; /* Ocupa toda a largura */
+    }
+
+    .filters {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .filters input {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    
     .cards-grid {
         grid-template-columns: 1fr; /* 1 coluna em telas pequenas */
     }
@@ -266,7 +344,6 @@ footer {
 .dashboard-container {
     padding: 20px;
     margin-top: 10px; /* Ajuste de margem superior */
-    margin-left: 220px; /* Alinhar ao sidebar */
     width: 90%; /* Ocupar toda a largura disponível */
     max-width: none; /* Remover limite de largura */
 }

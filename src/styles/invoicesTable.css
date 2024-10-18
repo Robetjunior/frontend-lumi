@@ -1,0 +1,102 @@
+/* Estilo específico para a página de faturas */
+
+/* Contêiner principal para a tabela de faturas */
+.invoices-page-container {
+    padding: 20px;
+    margin-left: 220px; /* Ajusta o espaço da sidebar */
+    width: calc(100% - 220px); /* Garante que ocupe o espaço correto */
+    background-color: #00362b;
+    color: #f0f8f0;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Tabela de faturas */
+.invoices-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.invoices-table th,
+.invoices-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f0f8f0;
+    text-align: left;
+}
+
+.invoices-table th {
+    background-color: #022e25;
+    color: #f0f8f0;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+}
+
+.invoices-table td {
+    background-color: #004c40;
+    color: #f0f8f0;
+    font-size: 0.85rem;
+}
+
+/* Estilo para os meses */
+.invoices-table td a {
+    color: #00ad75;
+    text-decoration: none;
+}
+
+.invoices-table td a:hover {
+    text-decoration: underline;
+}
+
+/* Alinhamento dos filtros */
+.filters {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.filters input {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #00ad75;
+    background-color: #004c40;
+    color: #f0f8f0;
+    width: 200px;
+}
+
+.filters input::placeholder {
+    color: #a3c6c1;
+}
+
+/* Botões de ano */
+.years button {
+    background-color: #004c40;
+    color: #f0f8f0;
+    border: 1px solid #00ad75;
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+.years button:hover {
+    background-color: #00ad75;
+}
+
+/* Ajustes responsivos */
+@media (max-width: 768px) {
+    .invoices-page-container {
+        margin-left: 55px; /* Espaçamento da sidebar */
+        width: 90%;
+    }
+
+    .filters {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .filters input {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}
