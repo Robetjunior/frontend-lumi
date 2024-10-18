@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { fetchInvoices } from '../services/api';
+import { FaBolt, FaBurn, FaLeaf, FaWallet, FaArrowUp, FaArrowDown } from 'react-icons/fa'; // Adicionado FaArrowUp e FaArrowDown
 
 // Definir os tipos de dados
 interface Invoice {
@@ -12,6 +13,18 @@ interface Invoice {
   energia_sceee_valor: string | number;
   energia_compensada_valor: string | number;
   contrib_ilum_publica: string | number;
+}
+interface CardData {
+  energiaGerada: number;
+  energiaConsumida: number;
+  energiaCompensada: number;
+  saldoCreditos: number;
+  previousValues: {
+    energiaGerada: number;
+    energiaConsumida: number;
+    energiaCompensada: number;
+    saldoCreditos: number;
+  };
 }
 
 interface GroupedData {
@@ -28,6 +41,18 @@ const Dashboard = () => {
   const [financialData, setFinancialData] = useState<GroupedData[]>([]);
   const [availableYears, setAvailableYears] = useState<string[]>([]);
   const [selectedYear, setSelectedYear] = useState<string>('2024');
+  const [cardData, setCardData] = useState<CardData>({
+    energiaGerada: 0,
+    energiaConsumida: 0,
+    energiaCompensada: 0,
+    saldoCreditos: 0,
+    previousValues: {
+      energiaGerada: 0,
+      energiaConsumida: 0,
+      energiaCompensada: 0,
+      saldoCreditos: 0,
+    },
+  });
 
   // Função para converter o nome do mês para número
   const monthToNumber = useCallback((month: string): number => {
@@ -116,10 +141,116 @@ const Dashboard = () => {
     }
   };
 
+  useEffect(() => {
+    fetchInvoices().then((response) => {
+      const invoices = response.data;
+
+      const sortedInvoices = invoices.sort((a: Invoice, b: Invoice) => {
+        const dateA = new Date(a.mes_referencia);
+        const dateB = new Date(b.mes_referencia);
+        return dateA.getTime() - dateB.getTime();
+      });
+
+      // Obter os dados do mês atual e do mês anterior
+      const currentInvoice = sortedInvoices[sortedInvoices.length - 1];
+      const previousInvoice = sortedInvoices[sortedInvoices.length - 2];
+
+      setCardData({
+        energiaGerada: Number(currentInvoice.energia_eletrica_kwh),
+        energiaConsumida: Number(currentInvoice.energia_sceee_kwh),
+        energiaCompensada: Number(currentInvoice.energia_compensada_kwh),
+        saldoCreditos: Math.abs(Number(currentInvoice.energia_compensada_valor)),
+        previousValues: {
+          energiaGerada: Number(previousInvoice.energia_eletrica_kwh),
+          energiaConsumida: Number(previousInvoice.energia_sceee_kwh),
+          energiaCompensada: Number(previousInvoice.energia_compensada_kwh),
+          saldoCreditos: Math.abs(Number(previousInvoice.energia_compensada_valor)),
+        },
+      });
+    });
+  }, []);
+
+  const getComparison = (current: number, previous: number) => {
+    const difference = current - previous;
+    const percentage = ((difference / Math.abs(previous)) * 100).toFixed(2); // Usar Math.abs para evitar divisão por zero
+
+    return {
+        text: difference > 0 ? `+${percentage}%` : `${percentage}%`,
+        className: difference > 0 ? 'increase' : 'decrease',
+        icon: difference > 0 ? <FaArrowUp className="comparison-icon" /> : <FaArrowDown className="comparison-icon" />,
+    };
+  };
+
   return (
     <div className="dashboard-container">
-      <h2>Dashboard</h2>
+      <h2>Dashboard Gerador</h2>
 
+      {/* Cards */}
+      <div className="cards-grid">
+        <div className="card">
+          <div className="card-content">
+            <div className="card-icon">
+              <FaBolt />
+            </div>
+            <div>
+              <h3>Energia Gerada</h3>
+              <p>{cardData.energiaGerada} kWh</p>
+            </div>
+          </div>
+          <hr className="divider" />
+          <div className={`card-comparison ${getComparison(cardData.energiaGerada, cardData.previousValues.energiaGerada).className}`}>
+            {getComparison(cardData.energiaGerada, cardData.previousValues.energiaGerada).text} em relação ao mês anterior
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-content">
+            <div className="card-icon">
+              <FaBurn />
+            </div>
+            <div>
+              <h3>Energia Consumida</h3>
+              <p>{cardData.energiaConsumida} kWh</p>
+            </div>
+          </div>
+          <hr className="divider" />
+          <div className={`card-comparison ${getComparison(cardData.energiaConsumida, cardData.previousValues.energiaConsumida).className}`}>
+            {getComparison(cardData.energiaConsumida, cardData.previousValues.energiaConsumida).text} em relação ao mês anterior
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-content">
+            <div className="card-icon">
+              <FaLeaf />
+            </div>
+            <div>
+              <h3>Energia Compensada</h3>
+              <p>{cardData.energiaCompensada} kWh</p>
+            </div>
+          </div>
+          <hr className="divider" />
+          <div className={`card-comparison ${getComparison(cardData.energiaCompensada, cardData.previousValues.energiaCompensada).className}`}>
+            {getComparison(cardData.energiaCompensada, cardData.previousValues.energiaCompensada).text} em relação ao mês anterior
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-content">
+            <div className="card-icon">
+              <FaWallet />
+            </div>
+            <div>
+              <h3>Saldo de Créditos</h3>
+              <p>R$ {cardData.saldoCreditos.toFixed(2)}</p>
+            </div>
+          </div>
+          <hr className="divider" />
+          <div className={`card-comparison ${getComparison(cardData.saldoCreditos, cardData.previousValues.saldoCreditos).className}`}>
+            {getComparison(cardData.saldoCreditos, cardData.previousValues.saldoCreditos).text} em relação ao mês anterior
+          </div>
+        </div>
+      </div>
       <div>
         <label>Selecionar Ano:</label>
         <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>
