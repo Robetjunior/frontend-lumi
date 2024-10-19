@@ -50,20 +50,25 @@
 /* Alinhamento dos filtros */
 .filters {
     display: flex;
+    justify-content: space-between; /* Mantém os itens divididos entre esquerda e direita */
     align-items: center;
-    justify-content: space-between;
     margin-bottom: 20px;
 }
 
-.filters input {
+.filters-left {
+    display: flex;
+    gap: 10px; /* Espaçamento entre os dois inputs */
+}
+
+.filters-left input {
     padding: 10px;
     border-radius: 5px;
+    margin: 10px;
     border: 1px solid #00ad75;
     background-color: #004c40;
     color: #f0f8f0;
     width: 200px;
 }
-
 .filters input::placeholder {
     color: #a3c6c1;
 }

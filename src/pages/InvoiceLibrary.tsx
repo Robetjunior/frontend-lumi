@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { fetchInvoicesSearch } from '../services/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilePdf } from '@fortawesome/free-solid-svg-icons';
-import { supabase } from '../config/supabase'; // Certifique-se de que o cliente do Supabase esteja configurado corretamente
 
 interface Invoice {
   id: number;
@@ -148,26 +147,31 @@ const InvoicesTable = () => {
   return (
     <div className="invoices-page-container">
       <div className="filters">
-        <input
-          type="text"
-          name="nome_uc"
-          placeholder="Filtrar por Nome da UC"
-          value={filter.nome_uc}
-          onChange={handleInputChange}
-        />
-        <input
-          type="text"
-          name="distribuidora"
-          placeholder="Filtrar por Distribuidora"
-          value={filter.distribuidora}
-          onChange={handleInputChange}
-        />
-        <div className="years">
-          <button onClick={() => handleYearChange('2020')}>2020</button>
-          <button onClick={() => handleYearChange('2021')}>2021</button>
-          <button onClick={() => handleYearChange('2022')}>2022</button>
-          <button onClick={() => handleYearChange('2023')}>2023</button>
-          <button onClick={() => handleYearChange('2024')}>2024</button>
+        <div className="filters-left">
+          <input
+            type="text"
+            name="nome_uc"
+            placeholder="Filtrar por Nome da UC"
+            value={filter.nome_uc}
+            onChange={handleInputChange}
+            style={{ marginRight: '20px'}}
+          />
+          <input
+            type="text"
+            name="distribuidora"
+            placeholder="Filtrar por Distribuidora"
+            value={filter.distribuidora}
+            onChange={handleInputChange}
+          />
+        </div>
+        <div className="filters-right">
+          <div className="years">
+            <button onClick={() => handleYearChange('2020')}>2020</button>
+            <button onClick={() => handleYearChange('2021')}>2021</button>
+            <button onClick={() => handleYearChange('2022')}>2022</button>
+            <button onClick={() => handleYearChange('2023')}>2023</button>
+            <button onClick={() => handleYearChange('2024')}>2024</button>
+          </div>
         </div>
       </div>
 
