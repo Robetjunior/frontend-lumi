@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/api'; // Ajuste a URL para a API correta
+const API_URL = 'https://young-journey-58853-4deb73cbc284.herokuapp.com/api'; // Ajuste a URL para a API correta
 
 // Função para buscar todas as faturas
 export const fetchInvoices = () => {
