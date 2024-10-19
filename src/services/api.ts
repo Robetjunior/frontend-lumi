@@ -1,14 +1,19 @@
 import axios from 'axios';
 
 // Substitua pela URL correta do seu backend no Heroku
-const API_URL = 'https://young-journey-58853-4deb73cbc284.herokuapp.com/api'; 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
 // Função para buscar todas as faturas
 export const fetchInvoices = async () => {
   try {
     console.log('Tentando buscar todas as faturas...');
     const response = await axios.get(`${API_URL}/invoices`);
-    console.log('Faturas encontradas:', response.data);
+    console.log('Resposta da API:', response.data);  // Verifique a resposta da API
+    
+    if (!Array.isArray(response.data)) {
+      throw new Error('A resposta da API não é um array.');
+    }
+    
     return response.data;
   } catch (error) {
     console.error('Erro ao buscar as faturas:', error);

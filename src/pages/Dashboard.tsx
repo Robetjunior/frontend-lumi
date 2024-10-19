@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { fetchInvoices } from '../services/api';
-import { FaBolt, FaBurn, FaLeaf, FaWallet, FaArrowUp, FaArrowDown } from 'react-icons/fa'; // Adicionado FaArrowUp e FaArrowDown
+import { FaBolt, FaBurn, FaLeaf, FaWallet, FaArrowUp, FaArrowDown } from 'react-icons/fa'; // Ícones adicionados
 
 // Definir os tipos de dados
 interface Invoice {
@@ -14,6 +14,7 @@ interface Invoice {
   energia_compensada_valor: string | number;
   contrib_ilum_publica: string | number;
 }
+
 interface CardData {
   energiaGerada: number;
   energiaConsumida: number;
@@ -53,6 +54,8 @@ const Dashboard = () => {
       saldoCreditos: 0,
     },
   });
+  const [loading, setLoading] = useState<boolean>(true); // Estado para carregar a API
+  const [error, setError] = useState<string | null>(null); // Estado para tratar erros
 
   // Função para converter o nome do mês para número
   const monthToNumber = useCallback((month: string): number => {
@@ -107,22 +110,69 @@ const Dashboard = () => {
     return Object.values(groupedData).sort((a, b) => monthToNumber(a.name.split('-')[1]) - monthToNumber(b.name.split('-')[1]));
   }, [monthToNumber]);
 
+
+  // UseEffect para buscar os dados da API
   useEffect(() => {
-    fetchInvoices().then(response => {
-      const invoices: Invoice[] = response.data;
-
-      // Extrair os anos disponíveis para o seletor de ano
-      const years = Array.from(new Set(invoices.map(invoice => invoice.mes_referencia.split('/')[1])));
-      setAvailableYears(years);
-
-      // Agrupar dados para o ano selecionado
-      const groupedEnergyData = groupDataByYear(invoices, selectedYear);
-      const groupedFinancialData = groupDataByYear(invoices, selectedYear);
-
-      // Definir os dados nos estados
-      setEnergyData(groupedEnergyData);
-      setFinancialData(groupedFinancialData);
-    });
+    setLoading(true); // Inicia o estado de carregamento
+    fetchInvoices()
+      .then((response: any) => {
+        const invoices = response;
+  
+        // Verifique se `invoices` é um array antes de processar
+        if (invoices && Array.isArray(invoices)) {
+          console.log('Faturas recebidas:', invoices);
+  
+          // Ordena as faturas pela data de referência (mes_referencia)
+          const sortedInvoices = invoices.sort((a: Invoice, b: Invoice) => {
+            // Supondo que a data seja uma string no formato "MM/YYYY", você pode ajustar a conversão para data real
+            const [monthA, yearA] = a.mes_referencia.split('/');
+            const [monthB, yearB] = b.mes_referencia.split('/');
+            const dateA = new Date(Number(yearA), Number(monthA) - 1);
+            const dateB = new Date(Number(yearB), Number(monthB) - 1);
+            return dateA.getTime() - dateB.getTime();
+          });
+  
+          // Verifique se há faturas suficientes para obter a atual e a anterior
+          if (sortedInvoices.length >= 2) {
+            const currentInvoice = sortedInvoices[sortedInvoices.length - 1];
+            const previousInvoice = sortedInvoices[sortedInvoices.length - 2];
+  
+            // Atualizar os dados dos cards com as faturas mais recentes
+            setCardData({
+              energiaGerada: Number(currentInvoice.energia_eletrica_kwh || 0),
+              energiaConsumida: Number(currentInvoice.energia_sceee_kwh || 0),
+              energiaCompensada: Number(currentInvoice.energia_compensada_kwh || 0),
+              saldoCreditos: Math.abs(Number(currentInvoice.energia_compensada_valor || 0)),
+              previousValues: {
+                energiaGerada: Number(previousInvoice.energia_eletrica_kwh || 0),
+                energiaConsumida: Number(previousInvoice.energia_sceee_kwh || 0),
+                energiaCompensada: Number(previousInvoice.energia_compensada_kwh || 0),
+                saldoCreditos: Math.abs(Number(previousInvoice.energia_compensada_valor || 0)),
+              },
+            });
+  
+            // Agrupar dados para o gráfico
+            const groupedEnergyData = groupDataByYear(sortedInvoices, selectedYear);
+            const groupedFinancialData = groupDataByYear(sortedInvoices, selectedYear);
+  
+            // Definir os dados nos estados
+            setEnergyData(groupedEnergyData);
+            setFinancialData(groupedFinancialData);
+          } else {
+            setError('Não há dados suficientes para comparação de meses.');
+          }
+        } else {
+          setError('A resposta da API não é um array');
+          console.error('A resposta da API não é um array:', invoices);
+        }
+      })
+      .catch((err) => {
+        console.error('Erro ao buscar ou processar as faturas:', err);
+        setError('Erro ao buscar os dados da API');
+      })
+      .finally(() => {
+        setLoading(false); // Finaliza o estado de carregamento
+      });
   }, [selectedYear, groupDataByYear]);
 
   // Função para formatar os valores no Tooltip
@@ -141,45 +191,26 @@ const Dashboard = () => {
     }
   };
 
-  useEffect(() => {
-    fetchInvoices().then((response) => {
-      const invoices = response.data;
-
-      const sortedInvoices = invoices.sort((a: Invoice, b: Invoice) => {
-        const dateA = new Date(a.mes_referencia);
-        const dateB = new Date(b.mes_referencia);
-        return dateA.getTime() - dateB.getTime();
-      });
-
-      // Obter os dados do mês atual e do mês anterior
-      const currentInvoice = sortedInvoices[sortedInvoices.length - 1];
-      const previousInvoice = sortedInvoices[sortedInvoices.length - 2];
-
-      setCardData({
-        energiaGerada: Number(currentInvoice.energia_eletrica_kwh),
-        energiaConsumida: Number(currentInvoice.energia_sceee_kwh),
-        energiaCompensada: Number(currentInvoice.energia_compensada_kwh),
-        saldoCreditos: Math.abs(Number(currentInvoice.energia_compensada_valor)),
-        previousValues: {
-          energiaGerada: Number(previousInvoice.energia_eletrica_kwh),
-          energiaConsumida: Number(previousInvoice.energia_sceee_kwh),
-          energiaCompensada: Number(previousInvoice.energia_compensada_kwh),
-          saldoCreditos: Math.abs(Number(previousInvoice.energia_compensada_valor)),
-        },
-      });
-    });
-  }, []);
-
   const getComparison = (current: number, previous: number) => {
     const difference = current - previous;
     const percentage = ((difference / Math.abs(previous)) * 100).toFixed(2); // Usar Math.abs para evitar divisão por zero
 
     return {
-        text: difference > 0 ? `+${percentage}%` : `${percentage}%`,
-        className: difference > 0 ? 'increase' : 'decrease',
-        icon: difference > 0 ? <FaArrowUp className="comparison-icon" /> : <FaArrowDown className="comparison-icon" />,
+      text: difference > 0 ? `+${percentage}%` : `${percentage}%`,
+      className: difference > 0 ? 'increase' : 'decrease',
+      icon: difference > 0 ? <FaArrowUp className="comparison-icon" /> : <FaArrowDown className="comparison-icon" />,
     };
   };
+
+  // Renderizar o conteúdo com base no estado de carregamento ou erro
+  if (loading) {
+    return <p>Carregando dados...</p>; // Mostrar uma mensagem de carregamento
+  }
+
+  if (error) {
+    return <p>{error}</p>; // Mostrar mensagem de erro
+  }
+
 
   return (
     <div className="dashboard-container">
@@ -251,6 +282,7 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
       <div>
         <label>Selecionar Ano:</label>
         <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>
@@ -260,17 +292,18 @@ const Dashboard = () => {
         </select>
       </div>
 
+      {/* Gráfico de Consumo de Energia Elétrica vs Energia Compensada */}
       <div className="chart-container">
         <h3>Consumo de Energia Elétrica vs. Energia Compensada</h3>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={energyData}>
+          <LineChart data={energyData.length > 0 ? energyData : []}>
             <XAxis dataKey="name" tickFormatter={(value) => value.split('-')[1]} />
             <YAxis />
-            <Tooltip 
+            <Tooltip
               contentStyle={{ backgroundColor: '#fff', color: '#000' }}
               labelStyle={{ color: '#000' }}
               itemStyle={{ color: '#007BFF' }}
-              formatter={tooltipFormatter}  // Usar a função de formatação do Tooltip
+              formatter={tooltipFormatter}
             />
             <CartesianGrid stroke="#00362b" strokeDasharray="3 3" />
             <Line type="monotone" dataKey="totalKwh" stroke="#00ad75" strokeWidth={2} />
@@ -279,17 +312,18 @@ const Dashboard = () => {
         </ResponsiveContainer>
       </div>
 
+      {/* Gráfico de Valor Total sem GD vs Economia GD */}
       <div className="chart-container">
         <h3>Valor Total sem GD vs. Economia GD</h3>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={financialData}>
+          <LineChart data={financialData.length > 0 ? financialData : []}>
             <XAxis dataKey="name" tickFormatter={(value) => value.split('-')[1]} />
             <YAxis />
-            <Tooltip 
+            <Tooltip
               contentStyle={{ backgroundColor: '#fff', color: '#000' }}
               labelStyle={{ color: '#000' }}
               itemStyle={{ color: '#007BFF' }}
-              formatter={tooltipFormatter}  // Usar a função de formatação do Tooltip
+              formatter={tooltipFormatter}
             />
             <CartesianGrid stroke="#00362b" strokeDasharray="3 3" />
             <Line type="monotone" dataKey="totalFinance" stroke="#00ad75" strokeWidth={2} />
