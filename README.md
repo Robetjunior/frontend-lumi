@@ -29,14 +29,17 @@ O desafio consistiu em extrair dados relevantes de um conjunto de faturas de ene
 ```bash
 git clone https://github.com/Robetjunior/Lumi-sChallenge.git
 cd Lumi-sChallenge
+```
 
 ### 2. Instalar Dependências
 ```bash
 npm install
+```
 
 ### 2. Instalar Dependências
 ```bash
 npm install
+```
 
 ### 3. Configurar Variáveis de Ambiente
 Crie um arquivo .env na raiz do projeto e insira as seguintes variáveis:
@@ -44,21 +47,25 @@ Crie um arquivo .env na raiz do projeto e insira as seguintes variáveis:
 REACT_APP_SUPABASE_URL=<seu-supabase-url>
 REACT_APP_SUPABASE_KEY=<seu-supabase-key>
 DATABASE_URL=postgres://<seu-url-do-banco-de-dados>
+```
 
 ### 4. Configurar o Banco de Dados
 Execute o seguinte comando para rodar as migrações e configurar o banco de dados
 ```bash
 npm run migrate
+```
 
 ### 5. Executar o Projeto em Desenvolvimento
 ```bash
 npm start
+```
 
 A aplicação estará disponível no navegador em http://localhost:3000.
 
 ### 6. Build para Produção
 ```bash
 npm run build
+```
 
 ### 7. Executar a API
 No diretório do backend, execute:
@@ -73,6 +80,7 @@ Você pode visualizar o projeto rodando no Heroku através deste link:
 Para rodar os testes, utilize o seguinte comando:
 ```bash
 npm test
+```
 
 ### Estrutura do Projeto
 ```bash
@@ -89,11 +97,12 @@ frontend-lumi/
 ├── package.json            # Gerenciamento de dependências e scripts
 ├── README.md               # Documentação do projeto
 └── tsconfig.json           # Configurações do TypeScript
+```
 
 ### Autor
 José Roberto - [LinkedIn](https://www.linkedin.com/in/jos%C3%A9-roberto-dev/)
 
 ```bash
 Este arquivo `README.md` cobre os principais tópicos necessários para a documentação do seu projeto, como a instalação, configuração, execução, tecnologias utilizadas, e outras informações relevantes. Certifique-se de ajustar as variáveis de ambiente e os links conforme o necessário.
-
+```
 
