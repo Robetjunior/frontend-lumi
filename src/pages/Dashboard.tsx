@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { fetchInvoices } from '../services/api';
-import { FaBolt, FaBurn, FaLeaf, FaWallet, FaArrowUp, FaArrowDown } from 'react-icons/fa'; // Ícones adicionados
+import { FaBolt, FaBurn, FaLeaf, FaWallet, FaArrowUp, FaArrowDown, FaArrowRight } from 'react-icons/fa'; // Ícones adicionados
 
 // Definir os tipos de dados
 interface Invoice {
@@ -99,7 +99,6 @@ const Dashboard = () => {
           groupedData[key].gastoMaiorQueEconomia = true;
         }
 
-        // Aplicar toFixed(2) para garantir que as casas decimais sejam sempre mostradas
         groupedData[key].totalKwh = parseFloat(groupedData[key].totalKwh.toFixed(2));
         groupedData[key].totalCompensada = parseFloat(groupedData[key].totalCompensada.toFixed(2));
         groupedData[key].totalFinance = parseFloat(groupedData[key].totalFinance.toFixed(2));
@@ -113,31 +112,30 @@ const Dashboard = () => {
 
   // UseEffect para buscar os dados da API
   useEffect(() => {
-    setLoading(true); // Inicia o estado de carregamento
+    setLoading(true);
     fetchInvoices()
       .then((response: any) => {
         const invoices = response;
-  
-        // Verifique se `invoices` é um array antes de processar
+
         if (invoices && Array.isArray(invoices)) {
           console.log('Faturas recebidas:', invoices);
-  
+
           // Ordena as faturas pela data de referência (mes_referencia)
           const sortedInvoices = invoices.sort((a: Invoice, b: Invoice) => {
-            // Supondo que a data seja uma string no formato "MM/YYYY", você pode ajustar a conversão para data real
             const [monthA, yearA] = a.mes_referencia.split('/');
             const [monthB, yearB] = b.mes_referencia.split('/');
             const dateA = new Date(Number(yearA), Number(monthA) - 1);
             const dateB = new Date(Number(yearB), Number(monthB) - 1);
             return dateA.getTime() - dateB.getTime();
           });
-  
-          // Verifique se há faturas suficientes para obter a atual e a anterior
+
           if (sortedInvoices.length >= 2) {
-            const currentInvoice = sortedInvoices[sortedInvoices.length - 1];
-            const previousInvoice = sortedInvoices[sortedInvoices.length - 2];
-  
-            // Atualizar os dados dos cards com as faturas mais recentes
+            const currentInvoice = sortedInvoices[sortedInvoices.length - 1]; // Mês atual
+            const previousInvoice = sortedInvoices[sortedInvoices.length - 2]; // Mês anterior
+
+            console.log('Fatura Atual:', currentInvoice);
+            console.log('Fatura Anterior:', previousInvoice);
+
             setCardData({
               energiaGerada: Number(currentInvoice.energia_eletrica_kwh || 0),
               energiaConsumida: Number(currentInvoice.energia_sceee_kwh || 0),
@@ -150,12 +148,24 @@ const Dashboard = () => {
                 saldoCreditos: Math.abs(Number(previousInvoice.energia_compensada_valor || 0)),
               },
             });
-  
+
+            console.log('Dados para os cartões:', {
+              energiaGerada: Number(currentInvoice.energia_eletrica_kwh || 0),
+              energiaConsumida: Number(currentInvoice.energia_sceee_kwh || 0),
+              energiaCompensada: Number(currentInvoice.energia_compensada_kwh || 0),
+              saldoCreditos: Math.abs(Number(currentInvoice.energia_compensada_valor || 0)),
+              previousValues: {
+                energiaGerada: Number(previousInvoice.energia_eletrica_kwh || 0),
+                energiaConsumida: Number(previousInvoice.energia_sceee_kwh || 0),
+                energiaCompensada: Number(previousInvoice.energia_compensada_kwh || 0),
+                saldoCreditos: Math.abs(Number(previousInvoice.energia_compensada_valor || 0)),
+              },
+            });
+
             // Agrupar dados para o gráfico
             const groupedEnergyData = groupDataByYear(sortedInvoices, selectedYear);
             const groupedFinancialData = groupDataByYear(sortedInvoices, selectedYear);
-  
-            // Definir os dados nos estados
+
             setEnergyData(groupedEnergyData);
             setFinancialData(groupedFinancialData);
           } else {
@@ -163,7 +173,6 @@ const Dashboard = () => {
           }
         } else {
           setError('A resposta da API não é um array');
-          console.error('A resposta da API não é um array:', invoices);
         }
       })
       .catch((err) => {
@@ -171,7 +180,7 @@ const Dashboard = () => {
         setError('Erro ao buscar os dados da API');
       })
       .finally(() => {
-        setLoading(false); // Finaliza o estado de carregamento
+        setLoading(false);
       });
   }, [selectedYear, groupDataByYear]);
 
@@ -192,17 +201,24 @@ const Dashboard = () => {
   };
 
   const getComparison = (current: number, previous: number) => {
+    if (current === previous) {
+      return {
+        text: "Sem alteração", // Ou outra mensagem que faça sentido para o usuário
+        className: 'no-change', // Classe CSS para estilizar caso não haja mudança
+        icon: <FaArrowRight className="comparison-icon" />, // Ícone para indicar que não houve mudança
+      };
+    }
+    
     const difference = current - previous;
-    const percentage = ((difference / Math.abs(previous)) * 100).toFixed(2); // Usar Math.abs para evitar divisão por zero
-
+    const percentage = ((difference / Math.abs(previous)) * 100).toFixed(2);
+  
     return {
       text: difference > 0 ? `+${percentage}%` : `${percentage}%`,
       className: difference > 0 ? 'increase' : 'decrease',
       icon: difference > 0 ? <FaArrowUp className="comparison-icon" /> : <FaArrowDown className="comparison-icon" />,
     };
   };
-
-  // Renderizar o conteúdo com base no estado de carregamento ou erro
+  
   if (loading) {
     return <p>Carregando dados...</p>; // Mostrar uma mensagem de carregamento
   }
@@ -216,7 +232,6 @@ const Dashboard = () => {
     <div className="dashboard-container">
       <h2>Dashboard Gerador</h2>
 
-      {/* Cards */}
       <div className="cards-grid">
         <div className="card">
           <div className="card-content">
