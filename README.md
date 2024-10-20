@@ -44,9 +44,8 @@ npm install
 ### 3. Configurar Variáveis de Ambiente
 Crie um arquivo .env na raiz do projeto e insira as seguintes variáveis:
 ```bash
-REACT_APP_SUPABASE_URL=<seu-supabase-url>
-REACT_APP_SUPABASE_KEY=<seu-supabase-key>
-DATABASE_URL=postgres://<seu-url-do-banco-de-dados>
+REACT_APP_SUPABASE_URL='https://yhivluwnxpbqwntxnmtn.supabase.co'
+REACT_APP_SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InloaXZsdXdueHBicXdudHhubXRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkxNjk2NjksImV4cCI6MjA0NDc0NTY2OX0.D5513Hj3C-8MWLsDQvXsken8xjI-igdHJqmXNPAVT3Q'
 ```
 
 ### 4. Configurar o Banco de Dados
