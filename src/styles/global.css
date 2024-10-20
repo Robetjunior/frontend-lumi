@@ -293,11 +293,11 @@ footer {
     }
     
     .cards-grid {
-        grid-template-columns: 1fr; /* 1 coluna em telas pequenas */
+        grid-template-columns: 1fr;
     }
 
     .card p {
-        font-size: 1.6rem; /* Diminuir o tamanho do texto em telas pequenas */
+        font-size: 1.6rem; 
     }
 }
 
@@ -329,23 +329,22 @@ footer {
     }
 
     .logo {
-        width: 100px; /* Reduzindo o tamanho do logo em telas menores */
+        width: 100px; 
     }
 }
 
-/* Ajuste para alinhamento perfeito */
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 20px; /* Adicionando espaçamento nas laterais */
+    padding: 0 20px;
 }
 
 /* Estilo para dashboard container */
 .dashboard-container {
     padding: 20px;
-    margin-top: 10px; /* Ajuste de margem superior */
-    width: 90%; /* Ocupar toda a largura disponível */
-    max-width: none; /* Remover limite de largura */
+    margin-top: 10px; 
+    width: 90%; 
+    max-width: none; 
 }
 
 .dashboard-container h2 {

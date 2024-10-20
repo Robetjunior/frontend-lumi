@@ -118,7 +118,6 @@ const Dashboard = () => {
         const invoices = response;
 
         if (invoices && Array.isArray(invoices)) {
-          console.log('Faturas recebidas:', invoices);
 
           // Ordena as faturas pela data de referência (mes_referencia)
           const sortedInvoices = invoices.sort((a: Invoice, b: Invoice) => {
@@ -133,23 +132,7 @@ const Dashboard = () => {
             const currentInvoice = sortedInvoices[sortedInvoices.length - 1]; // Mês atual
             const previousInvoice = sortedInvoices[sortedInvoices.length - 2]; // Mês anterior
 
-            console.log('Fatura Atual:', currentInvoice);
-            console.log('Fatura Anterior:', previousInvoice);
-
             setCardData({
-              energiaGerada: Number(currentInvoice.energia_eletrica_kwh || 0),
-              energiaConsumida: Number(currentInvoice.energia_sceee_kwh || 0),
-              energiaCompensada: Number(currentInvoice.energia_compensada_kwh || 0),
-              saldoCreditos: Math.abs(Number(currentInvoice.energia_compensada_valor || 0)),
-              previousValues: {
-                energiaGerada: Number(previousInvoice.energia_eletrica_kwh || 0),
-                energiaConsumida: Number(previousInvoice.energia_sceee_kwh || 0),
-                energiaCompensada: Number(previousInvoice.energia_compensada_kwh || 0),
-                saldoCreditos: Math.abs(Number(previousInvoice.energia_compensada_valor || 0)),
-              },
-            });
-
-            console.log('Dados para os cartões:', {
               energiaGerada: Number(currentInvoice.energia_eletrica_kwh || 0),
               energiaConsumida: Number(currentInvoice.energia_sceee_kwh || 0),
               energiaCompensada: Number(currentInvoice.energia_compensada_kwh || 0),
