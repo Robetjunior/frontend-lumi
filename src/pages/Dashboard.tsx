@@ -298,15 +298,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div>
-        <label>Selecionar Ano:</label>
-        <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>
-          {availableYears.map(year => (
-            <option key={year} value={year}>{year}</option>
-          ))}
-        </select>
-      </div>
-
       {/* Gráfico de Consumo de Energia Elétrica vs Energia Compensada */}
       <div className="chart-container">
         <h3>Consumo de Energia Elétrica vs. Energia Compensada</h3>
