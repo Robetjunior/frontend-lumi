@@ -75,6 +75,10 @@ A API rodará na porta 3001.
 Você pode visualizar o projeto rodando no Heroku através deste link:
 [Executar o projeto](https://lumi-front-82af2d71e234.herokuapp.com/)
 
+### Acesso a API
+Você pode visualizar o projeto rodando no Heroku através deste link:
+[Repositório API](https://github.com/Robetjunior/Lumi-sChallenge/)
+
 ### Testes
 Para rodar os testes, utilize o seguinte comando:
 ```bash
