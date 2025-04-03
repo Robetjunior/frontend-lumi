@@ -1,7 +1,31 @@
 import React, { useEffect, useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+} from 'recharts';
+import { 
+  FaBolt, 
+  FaBurn, 
+  FaLeaf, 
+  FaWallet, 
+  FaMoneyBillWave, 
+  FaSolarPanel, 
+  FaPercent,
+  FaArrowUp,
+  FaArrowDown,
+  FaArrowRight,
+  FaDownload,
+  FaFilter
+} from 'react-icons/fa';
 import { fetchDashboardData } from '../services/api';
-import { FaBolt, FaBurn, FaLeaf, FaWallet, FaArrowUp, FaArrowDown, FaArrowRight } from 'react-icons/fa';
 
 interface CardData {
   energiaGerada: number;
@@ -36,7 +60,6 @@ interface Comparison {
   icon: React.ReactNode;
 }
 
-// Função para calcular comparação entre valores atuais e anteriores
 const getComparison = (current: number, previous: number): Comparison => {
   if (current === previous) {
     return {
@@ -85,7 +108,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({ icon, title, value, unit,
 
 const Dashboard: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [selectedYear, setSelectedYear] = useState<string>('2024');
+  const [selectedYear, _] = useState<string>('2024');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -126,8 +149,10 @@ const Dashboard: React.FC = () => {
   const { cardData, groupedData } = dashboardData;
 
   return (
-    <div className="dashboard-container">
-      <h2>Dashboard Gerador</h2>
+    <div className="dashboard-container fade-in">
+      <div className="dashboard-header">
+        <h1 className="dashboard-title">Dashboard de Energia</h1>
+      </div>
 
       <div className="cards-grid">
         <DashboardCard 
@@ -160,32 +185,56 @@ const Dashboard: React.FC = () => {
         />
       </div>
 
-      <div className="chart-container">
-        <h3>Consumo de Energia Elétrica vs. Energia Compensada</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={groupedData}>
-            <XAxis dataKey="name" tickFormatter={(value) => value.split('-')[1]} />
-            <YAxis />
-            <Tooltip formatter={tooltipFormatter} />
-            <CartesianGrid stroke="#00362b" strokeDasharray="3 3" />
-            <Line type="monotone" dataKey="totalKwh" stroke="#00ad75" strokeWidth={2} />
-            <Line type="monotone" dataKey="totalCompensada" stroke="#FF6347" strokeWidth={2} />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      <div className="chart-container">
-        <h3>Valor Total sem GD vs. Economia GD</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={groupedData}>
-            <XAxis dataKey="name" tickFormatter={(value) => value.split('-')[1]} />
-            <YAxis />
-            <Tooltip formatter={tooltipFormatter} />
-            <CartesianGrid stroke="#00362b" strokeDasharray="3 3" />
-            <Line type="monotone" dataKey="totalFinance" stroke="#00ad75" strokeWidth={2} />
-            <Line type="monotone" dataKey="totalEconomia" stroke="#FF6347" strokeWidth={2} />
-          </LineChart>
-        </ResponsiveContainer>
+      <div className="charts-container">
+        <div className="chart-container">
+          <div className="chart-header">
+            <h3 className="chart-title">Consumo vs Energia Compensada (kWh)</h3>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={groupedData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
+              <XAxis dataKey="name" stroke="#004d40" />
+              <YAxis stroke="#004d40" />
+              <Tooltip formatter={tooltipFormatter} />
+              <Legend />
+              <Bar dataKey="totalKwh" name="Consumo (kWh)" fill="#00ad75" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="totalCompensada" name="Compensada (kWh)" fill="#00c382" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        
+        <div className="chart-container">
+          <div className="chart-header">
+            <h3 className="chart-title">Resultado Financeiro (R$)</h3>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={groupedData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
+              <XAxis dataKey="name" stroke="#004d40" />
+              <YAxis stroke="#004d40" />
+              <Tooltip formatter={tooltipFormatter} />
+              <Legend />
+              <Line 
+                type="monotone" 
+                dataKey="totalFinance" 
+                name="Valor sem GD (R$)" 
+                stroke="#00ad75" 
+                strokeWidth={3}
+                dot={{ r: 6 }}
+                activeDot={{ r: 8 }}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="totalEconomia" 
+                name="Economia GD (R$)" 
+                stroke="#00c382" 
+                strokeWidth={3}
+                dot={{ r: 6 }}
+                activeDot={{ r: 8 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );

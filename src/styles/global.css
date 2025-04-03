@@ -1,396 +1,686 @@
-/* Reset básico */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-}
-
-/* Variáveis CSS para paleta de cores */
-:root {
-    --main-bg-color: #00362b; /* Dark Green */
+  }
+  
+  /* Variáveis CSS para paleta de cores */
+  :root {
+    --main-bg-color: #e0f2e9; /* Fundo verde claro */
+    --content-bg-color: #f2faf6; /* Fundo mais claro para o conteúdo */
     --highlight-color: #00ad75; /* Light Green */
     --secondary-highlight-color: #00c382; /* Lighter Green */
-    --text-color: #f0f8f0; /* Off-white */
-    --sidebar-bg-color: #022e25; /* Darker Green */
-    --cta-button-color: #005e4d; /* Button Green */
-}
-
-/* Estilos gerais */
-body {
+    --text-color: #004d40; /* Dark Green para texto */
+    --title-color: #00362b; /* Verde muito escuro para títulos */
+    --sidebar-bg-color: #004d40; /* Darker Green para sidebar */
+    --cta-button-color: #00796b; /* Button Green */
+    
+    /* Novas variáveis */
+    --card-bg-color: rgba(255, 255, 255, 0.98);
+    --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    --transition-speed: 0.3s;
+    --border-radius: 12px;
+    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    --table-header-bg: #004d40;
+    --table-row-bg: #e0f2e9;
+    --table-row-alt-bg: #c8e6d9;
+    --chart-bg-color: #ffffff;
+    --table-text-color: #004d40;
+  }
+  
+  /* Estilos gerais */
+  body {
     background-color: var(--main-bg-color);
     color: var(--text-color);
     font-family: 'Poppins', sans-serif;
     margin: 0;
-    padding: 0; /* Sem padding no body */
-}
-
-/* Contêiner principal */
-.app-container {
+    padding: 0;
+    min-height: 100vh;
+  }
+  
+  /* Container principal */
+  .app-container {
     display: flex;
-    flex-direction: row; /* Sidebar e conteúdo lado a lado */
-}
-
-/* Sidebar */
-.sidebar {
-    width: 220px; /* Largura fixa para a sidebar */
-    padding: 15px;
-    height: 100vh; /* Ocupa toda a altura da tela */
+    flex-direction: row;
+    min-height: 100vh;
+    position: relative;
+  }
+  
+  /* Estilos do sidebar */
+  .sidebar {
+    width: 250px;
+    height: 100vh;
+    background-color: var(--sidebar-bg-color);
     position: fixed;
     top: 0;
     left: 0;
-    background-color: var(--sidebar-bg-color);
+    z-index: 100;
+    transition: transform var(--transition-speed);
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.15);
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     align-items: center;
-    z-index: 100; /* Mantém a sidebar acima de outros elementos */
-}
-
-/* Estilos para o logo */
-.logo {
-    width: 150px; /* Tamanho ajustado do logo */
-    height: auto; /* Manter a proporção */
-    margin-bottom: 20px; /* Espaçamento abaixo do logo */
-}
-
-/* Contêiner de conteúdo */
-.content {
-    margin-left: 220px; /* Espaçamento da sidebar */
-    padding: 20px;
-    width: calc(100% - 220px); /* Expandir o conteúdo com base no espaço disponível */
-}
-
-.invoices-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
-
-.invoices-table th,
-.invoices-table td {
-    padding: 12px 15px;
-    border-bottom: 1px solid var(--text-color);
-    text-align: left;
-}
-
-.invoices-table th {
-    background-color: var(--sidebar-bg-color);
-    color: var(--text-color);
-    text-transform: uppercase;
-    font-size: 0.9rem;
-}
-
-.invoices-table td {
-    background-color: #004c40;
-    color: var(--text-color);
-    font-size: 0.85rem;
-}
-
-/* Filtros */
-.filters {
+    padding: 20px 15px;
+  }
+  
+  .sidebar.collapsed {
+    transform: translateX(-250px);
+  }
+  
+  .sidebar-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 20px;
-}
-
-.filters input {
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid var(--highlight-color);
-    background-color: #004c40;
-    color: var(--text-color);
-    width: 200px;
-}
-
-.filters input::placeholder {
-    color: #a3c6c1;
-}
-
-/* Botões de ano */
-.years button {
-    background-color: #004c40;
-    color: var(--text-color);
-    border: 1px solid var(--highlight-color);
-    padding: 10px 15px;
-    border-radius: 5px;
-    margin-right: 10px;
+    width: 100%;
+    margin-bottom: 30px;
+  }
+  
+  .logo {
+    width: 150px;
+    height: auto;
+  }
+  
+  .sidebar-toggle {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 101;
+    background-color: var(--sidebar-bg-color);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-}
-
-.years button:hover {
+    box-shadow: var(--box-shadow);
+    transition: all 0.2s;
+    opacity: 0;
+  }
+  
+  .sidebar-toggle:hover {
     background-color: var(--highlight-color);
-}
-
-/* Estilos de cabeçalhos */
-h1, h2, h3, h4, h5, h6 {
-    color: var(--text-color);
-    font-family: 'Poppins', sans-serif;
-}
-
-
-/* Estilização de links */
-a {
+  }
+  
+  .sidebar-toggle.visible {
+    opacity: 1;
+  }
+  
+  /* Links da sidebar */
+  .sidebar nav {
+    width: 100%;
+  }
+  
+  .sidebar nav ul {
+    list-style-type: none;
+    width: 100%;
+    padding: 0;
+  }
+  
+  .sidebar nav ul li {
+    margin: 8px 0;
+    width: 100%;
+  }
+  
+  .sidebar-link {
+    color: #fff;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    border-radius: var(--border-radius);
+    transition: all var(--transition-speed);
+    font-weight: 500;
+    width: 100%;
+  }
+  
+  .sidebar-link:hover, .sidebar-link.active {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--secondary-highlight-color);
+    transform: translateX(5px);
+  }
+  
+  .sidebar-icon {
+    margin-right: 12px;
+    font-size: 1.2rem;
+  }
+  
+  /* Conteúdo principal */
+  .content {
+    flex: 1;
+    margin-left: 250px;
+    padding: 30px;
+    transition: margin-left var(--transition-speed);
+    width: calc(100% - 250px);
+    background-color: var(--content-bg-color);
+  }
+  
+  .content.full-width {
+    margin-left: 0;
+    width: 100%;
+  }
+  
+  /* Dashboard Styles */
+  .dashboard-container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  .dashboard-header {
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .dashboard-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--title-color);
+    position: relative;
+    padding-bottom: 10px;
+  }
+  
+  .dashboard-title::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 60px;
+    height: 4px;
+    background-color: var(--highlight-color);
+    border-radius: 2px;
+  }
+  
+  /* Cards Grid */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-bottom: 40px;
+  }
+  
+  .card {
+    background-color: var(--card-bg-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    padding: 24px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.2);
+  }
+  
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background-color: var(--highlight-color);
+  }
+  
+  .card-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+  
+  .card-text {
+    flex: 1;
+  }
+  
+  .card-icon {
+    background-color: var(--highlight-color);
+    color: white;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 10px rgba(0, 173, 117, 0.3);
+  }
+  
+  .card h3 {
+    color: var(--title-color);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  
+  .card p {
+    font-size: 1.8rem;
+    color: var(--highlight-color);
+    font-weight: 700;
+    margin: 0;
+  }
+  
+  .divider {
+    width: 100%;
+    height: 1px;
+    background-color: rgba(0, 0, 0, 0.1);
+    margin: 15px 0;
+  }
+  
+  .card-comparison {
+    font-size: 0.9rem;
+    color: #555;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-top: 10px;
+  }
+  
+  .card-comparison.increase {
+    color: var(--highlight-color);
+  }
+  
+  .card-comparison.decrease {
+    color: #ff5252;
+  }
+  
+  .comparison-icon {
+    font-size: 1rem;
+    margin-right: 5px;
+  }
+  
+  /* Gráficos */
+  .charts-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: 24px;
+    margin-bottom: 50px;
+  }
+  
+  .chart-container {
+    background-color: var(--chart-bg-color);
+    border-radius: var(--border-radius);
+    padding: 24px;
+    box-shadow: var(--box-shadow);
+    margin-bottom: 30px;
+  }
+  
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .chart-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--title-color);
+  }
+  
+  /* Tabela de faturas */
+  .invoices-container {
+    background-color: var(--chart-bg-color);
+    border-radius: var(--border-radius);
+    padding: 24px;
+    box-shadow: var(--box-shadow);
+    overflow-x: auto;
+    margin-bottom: 40px;
+  }
+  
+  .table-container {
+    overflow-x: auto;
+    width: 100%;
+  }
+  
+  .invoices-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 20px;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+  }
+  
+  .invoices-table th,
+  .invoices-table td {
+    padding: 14px 20px;
+    text-align: left;
+  }
+  
+  .invoices-table th {
+    background-color: var(--table-header-bg);
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .invoices-table tr:nth-child(even) td {
+    background-color: var(--table-row-alt-bg);
+  }
+  
+  .invoices-table tr:nth-child(odd) td {
+    background-color: var(--table-row-bg);
+  }
+  
+  .invoices-table td {
+    color: var(--table-text-color);
+    font-size: 0.95rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+  
+  .invoices-table tr:last-child td {
+    border-bottom: none;
+  }
+  
+  .invoices-table tr:hover td {
+    background-color: rgba(0, 173, 117, 0.1);
+  }
+  
+  /* Link nas tabelas */
+  .invoices-table td a {
     color: var(--highlight-color);
     text-decoration: none;
-    font-family: 'Poppins', sans-serif;
-}
-
-a:hover {
-    color: var(--secondary-highlight-color);
-}
-
-/* Botões */
-button {
-    background-color: var(--cta-button-color);
-    color: var(--text-color);
-    font-family: 'Poppins', sans-serif;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-button:hover {
+    transition: color 0.2s;
+    display: inline-block;
+    position: relative;
+  }
+  
+  .invoices-table td a::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
     background-color: var(--highlight-color);
-}
-
-/* Contêiner dos gráficos */
-.chart-container {
-    background-color: var(--sidebar-bg-color);
-    border-radius: 8px;
-    padding: 15px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    margin-bottom: 40px; /* Espaçamento abaixo dos gráficos */
-}
-
-/* Campos de input e select */
-input, select {
-    background-color: var(--sidebar-bg-color);
-    color: var(--text-color);
-    font-family: 'Poppins', sans-serif;
-    border: 1px solid var(--highlight-color);
-    padding: 8px;
-    border-radius: 5px;
-}
-
-/* Rodapé */
-footer {
-    background-color: var(--main-bg-color);
-    color: var(--text-color);
-    text-align: center;
-    padding: 20px;
-    font-family: 'Poppins', sans-serif;
-    position: fixed;
+    transition: width 0.2s;
+  }
+  
+  .invoices-table td a:hover {
+    color: var(--secondary-highlight-color);
+  }
+  
+  .invoices-table td a:hover::after {
     width: 100%;
-    bottom: 0;
-}
-
-/* Estilização dos cards no Dashboard */
-.cards-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr); /* 4 colunas de tamanhos iguais */
-    gap: 20px; /* Espaçamento entre os cards */
-    margin-bottom: 30px; /* Espaçamento abaixo da seção dos cards */
-}
-
-.card {
-    background-color: #fff; /* Fundo branco */
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra suave */
-    padding: 20px;
-    text-align: left; /* Alinhado à esquerda */
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between; /* Espaço entre o título e o valor */
-    align-items: center; /* Centraliza horizontalmente o conteúdo */
-}
-
-.card-content {
+  }
+  
+  /* Filtros */
+  .filters {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    width: 100%; /* Largura do conteúdo do card */
-}
-
-.card-icon {
-    background-color: var(--highlight-color); /* Cor de fundo do ícone */
-    color: #fff;
-    border-radius: 50%; /* Formato circular */
-    width: 40px; /* Aumenta o tamanho do ícone */
-    height: 40px; /* Aumenta o tamanho do ícone */
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  
+  .filters-left {
     display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+  
+  .filters input, .filters select {
+    padding: 12px 15px;
+    border-radius: var(--border-radius);
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    color: var(--text-color);
+    font-size: 0.95rem;
+    min-width: 200px;
+    transition: all 0.2s;
+  }
+  
+  .filters input:focus, .filters select:focus {
+    border-color: var(--highlight-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 173, 117, 0.2);
+  }
+  
+  .filters input::placeholder {
+    color: rgba(0, 0, 0, 0.4);
+  }
+  
+  /* Anos dos filtros */
+  .years {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  
+  .years button {
+    background-color: #fff;
+    color: var(--text-color);
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    padding: 10px 18px;
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .years button:hover {
+    background-color: rgba(0, 173, 117, 0.1);
+    border-color: var(--highlight-color);
+  }
+  
+  .years button.active {
+    background-color: var(--highlight-color);
+    border-color: var(--highlight-color);
+    color: white;
+  }
+  
+  /* Botões e Controles */
+  .button {
+    background-color: var(--cta-button-color);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    margin-right: 10px; /* Maior espaçamento entre ícone e texto */
-    font-size: 1.2rem; /* Aumenta o tamanho do ícone */
-}
-
-.card h3 {
-    margin-bottom: 5px;
-    color: var(--main-bg-color); /* Mantém a paleta: cor definida para o fundo principal */
-    font-size: 1rem; /* Aumenta o tamanho da fonte para melhor legibilidade */
-    font-weight: 600; /* Adiciona peso para destacar o título */
-}
-
-.recharts-default-tooltip {
-    background-color: rgba(255, 255, 255, 0.9) !important; /* Fundo claro */
-    color: #00362b !important; /* Texto escuro para contraste */
-    border: 1px solid var(--highlight-color) !important;
-    border-radius: 4px;
-    padding: 8px;
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.9rem;
-}
-
-.recharts-default-tooltip .recharts-tooltip-label {
-    font-weight: 600;
-    color: #00362b !important; /* Cor do label (ano-mês) */
-}
-
-/* Ajuste para a legenda do Recharts (se necessário) */
-.recharts-legend-wrapper .recharts-legend-item text {
-    fill: var(--text-color) !important; /* Usa a cor de texto principal do tema */
+    gap: 8px;
+  }
+  
+  .button:hover {
+    background-color: var(--highlight-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  .button-icon {
+    font-size: 1.1rem;
+  }
+  
+  /* Animações */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .fade-in {
+    animation: fadeIn 0.5s ease forwards;
+  }
+  
+  /* Tooltips para Gráficos */
+  .recharts-default-tooltip {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    border: none !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+    padding: 12px !important;
+    font-family: 'Poppins', sans-serif !important;
+  }
+  
+  .recharts-default-tooltip .recharts-tooltip-label {
+    font-weight: 600 !important;
+    color: var(--title-color) !important;
+    margin-bottom: 5px !important;
     font-size: 0.9rem !important;
-    font-weight: 600;
-}
-
-.card p {
-    font-size: 1.3rem; /* Diminuir o tamanho do valor */
-    color: #00ad75; /* Cor do valor */
-    font-weight: bold;
-    margin: 0; /* Remove margem inferior */
-}
-
-.divider {
-    width: 100%;
-    height: 2px; /* Aumentar a altura para uma melhor visibilidade */
-    background-color: #ccc;
-    margin: 15px 0; /* Espaçamento consistente antes e depois da linha */
-    flex-shrink: 0; /* Impede que o divisor encolha */
-}
-
-.card-comparison {
-    font-size: 0.75rem; /* Tamanho um pouco maior para o texto de comparação */
-    color: #777;
-    margin-top: 10px;
+  }
+  
+  .recharts-tooltip-item {
+    color: #555 !important;
+    font-size: 0.85rem !important;
+    padding: 3px 0 !important;
+  }
+  
+  .recharts-tooltip-item-name {
+    font-weight: 500 !important;
+  }
+  
+  .recharts-tooltip-item-value {
+    font-weight: 600 !important;
+  }
+  
+  .recharts-legend-wrapper .recharts-legend-item text {
+    fill: var(--text-color) !important;
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+  }
+  
+  /* Página de Faturas - Seção específica */
+  .invoices-page-container {
+    padding: 20px;
+    background-color: var(--content-bg-color);
+    color: var(--text-color);
+  }
+  
+  .invoice-month-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+  }
+  
+  .month-button {
+    padding: 10px;
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.2s;
     text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.card-comparison.increase {
-    color: var(--highlight-color); /* Cor verde para aumento */
-}
-
-.card-comparison.decrease {
-    color: #ff6347; /* Cor vermelha para diminuição */
-}
-
-.comparison-icon {
-    font-size: 1.2rem;
-    margin-left: 5px; /* Espaçamento entre texto e ícone */
-}
-
-/* Responsividade para dispositivos menores */
-@media (max-width: 1200px) {
-    .cards-grid {
-        grid-template-columns: repeat(2, 1fr); /* 2 colunas em telas menores */
+  }
+  
+  .month-button:hover {
+    background-color: rgba(0, 173, 117, 0.1);
+    border-color: var(--highlight-color);
+  }
+  
+  .month-button.available {
+    background-color: var(--highlight-color);
+    color: white;
+    border-color: var(--highlight-color);
+  }
+  
+  .month-button.available:hover {
+    background-color: var(--secondary-highlight-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Responsividade */
+  @media (max-width: 1200px) {
+    .charts-container {
+      grid-template-columns: 1fr;
     }
-}
-
-@media (max-width: 768px) {
-    .content {
-        margin-left: 0; /* Remove margem da sidebar */
-        width: 100%; /* Ocupa toda a largura */
-    }
-
-    .filters {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .filters input {
-        width: 100%;
-        margin-bottom: 10px;
+  }
+  
+  @media (max-width: 992px) {
+    .sidebar {
+      width: 220px;
     }
     
+    .content {
+      margin-left: 220px;
+      width: calc(100% - 220px);
+    }
+  
+    .sidebar-toggle {
+      opacity: 1;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .sidebar {
+      transform: translateX(-250px);
+    }
+    
+    .sidebar.open {
+      transform: translateX(0);
+    }
+    
+    .content {
+      margin-left: 0;
+      width: 100%;
+      padding: 20px;
+    }
+    
+    .sidebar-toggle {
+      opacity: 1;
+    }
+  
+    .filters {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .filters-left {
+      width: 100%;
+    }
+    
+    .filters input, .filters select {
+      width: 100%;
+    }
+    
+    .years {
+      width: 100%;
+      justify-content: flex-start;
+    }
+    
+    .dashboard-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 15px;
+    }
+  }
+  
+  @media (max-width: 576px) {
     .cards-grid {
-        grid-template-columns: 1fr;
+      grid-template-columns: 1fr;
     }
-
-    .card p {
-        font-size: 1.6rem; 
-    }
-}
-
-@media (max-width: 1080px) {
-    html {
-        font-size: 93.75%;
-    }
-
-    .sidebar {
-        width: 180px;
-    }
-
+    
     .content {
-        width: calc(100% - 180px);
+      padding: 15px;
     }
-}
-
-@media (max-width: 720px) {
-    html {
-        font-size: 87.5%;
+    
+    .invoices-container,
+    .chart-container {
+      padding: 15px;
     }
-
-    .sidebar {
-        width: 150px;
+    
+    .invoices-table th,
+    .invoices-table td {
+      padding: 10px 12px;
     }
-
-    .content {
-        width: calc(100% - 150px);
+    
+    .dashboard-title {
+      font-size: 1.5rem;
     }
-
-    .logo {
-        width: 100px; 
-    }
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
-/* Estilo para dashboard container */
-.dashboard-container {
-    padding: 20px;
-    margin-top: 10px; 
-    width: 90%; 
-    max-width: none; 
-}
-
-.dashboard-container h2 {
-    margin-bottom: 20px;
-    font-size: 2rem;
-}
-
-/* Adiciona espaçamento abaixo dos gráficos */
-.chart-container {
-    background-color: var(--sidebar-bg-color);
-    border-radius: 8px;
-    padding: 15px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    margin-bottom: 40px;
-    width: 100%; /* Garantir que o gráfico ocupe toda a largura */
-}
-
-@media (max-width: 600px) {
-    .card h3 {
-        font-size: 1rem;
-    }
-
-    .card p {
-        font-size: 1.4rem;
-    }
-}
+  }

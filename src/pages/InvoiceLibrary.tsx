@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { fetchInvoicesSearch } from '../services/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilePdf } from '@fortawesome/free-solid-svg-icons';
@@ -174,7 +174,10 @@ const InvoicesTable = () => {
   };
 
   return (
-    <div className="invoices-page-container" style={{ padding: '20px', color: '#fff' }}>
+    <div className="dashboard-container fade-in">
+      <div className="dashboard-header">
+        <h1 className="dashboard-title">Biblioteca de Faturas</h1>
+      </div>
       <div
         className="header"
         style={{
@@ -275,7 +278,7 @@ const InvoicesTable = () => {
                   <input
                     type="checkbox"
                     checked={checked}
-                    onClick={(e) => e.stopPropagation()} // Evita duplo toggle
+                    onClick={(e) => e.stopPropagation()}
                     onChange={() => toggleSelectedItem(item)}
                     style={{ cursor: 'pointer' }}
                   />
@@ -300,68 +303,73 @@ const InvoicesTable = () => {
         </div>
       )}
 
-      <table
-        className="invoices-table"
-        style={{
-          width: '100%',
-          borderCollapse: 'collapse',
-          backgroundColor: 'rgba(255,255,255,0.05)',
-        }}
-      >
-        <thead>
-          <tr>
-            <th style={{ padding: '10px', borderBottom: '1px solid #4caf50', textAlign: 'left' }}>NOME DA UC</th>
-            <th style={{ padding: '10px', borderBottom: '1px solid #4caf50', textAlign: 'left' }}>NÚMERO DA UC</th>
-            <th style={{ padding: '10px', borderBottom: '1px solid #4caf50', textAlign: 'left' }}>DISTRIBUIDORA</th>
-            {Object.values(monthsMap).map((month, index) => (
-              <th key={index} style={{ padding: '10px', borderBottom: '1px solid #4caf50', textAlign: 'center' }}>{month}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {finalGroupedInvoices.length > 0 ? (
-            finalGroupedInvoices.map(invoice => (
-              <tr key={invoice.id} style={{ borderBottom: '1px solid #4caf50' }}>
-                <td style={{ padding: '8px' }}>{invoice.nome_uc}</td>
-                <td style={{ padding: '8px' }}>{invoice.no_cliente}</td>
-                <td style={{ padding: '8px' }}>{invoice.distribuidora}</td>
-                {Object.values(monthsMap).map((month, index) => (
-                  <td
-                    key={index}
-                    style={{
-                      padding: '8px',
-                      textAlign: 'center',
-                    }}
-                  >
-                    {invoice.months?.[month] ? (
-                      <button
-                        onClick={() => downloadFile(invoice.months![month], `${invoice.nome_uc}-${month}.pdf`)}
-                        disabled={isDownloading}
-                        style={{
-                          backgroundColor: '#388e3c',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: '4px',
-                          padding: '6px 10px',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <FontAwesomeIcon icon={faFilePdf} />
-                      </button>
-                    ) : (
-                      <span> - </span>
-                    )}
-                  </td>
-                ))}
-              </tr>
-            ))
-          ) : (
+      <div className="bg-white shadow-md rounded-md p-4 mb-8">
+        <div className="flex justify-between items-center mb-4">
+         
+        </div>
+        <table
+          className="invoices-table"
+          style={{
+            width: '100%',
+            borderCollapse: 'collapse',
+            backgroundColor: 'rgba(255,255,255,0.05)',
+          }}
+        >
+          <thead>
             <tr>
-              <td colSpan={15} style={{ padding: '8px', textAlign: 'center' }}>Nenhum item encontrado.</td>
+              <th style={{ padding: '10px', borderBottom: '1px solid #4caf50', textAlign: 'left' }}>NOME DA UC</th>
+              <th style={{ padding: '10px', borderBottom: '1px solid #4caf50', textAlign: 'left' }}>NÚMERO DA UC</th>
+              <th style={{ padding: '10px', borderBottom: '1px solid #4caf50', textAlign: 'left' }}>DISTRIBUIDORA</th>
+              {Object.values(monthsMap).map((month, index) => (
+                <th key={index} style={{ padding: '10px', borderBottom: '1px solid #4caf50', textAlign: 'center' }}>{month}</th>
+              ))}
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {finalGroupedInvoices.length > 0 ? (
+              finalGroupedInvoices.map(invoice => (
+                <tr key={invoice.id} style={{ borderBottom: '1px solid #4caf50' }}>
+                  <td style={{ padding: '8px' }}>{invoice.nome_uc}</td>
+                  <td style={{ padding: '8px' }}>{invoice.no_cliente}</td>
+                  <td style={{ padding: '8px' }}>{invoice.distribuidora}</td>
+                  {Object.values(monthsMap).map((month, index) => (
+                    <td
+                      key={index}
+                      style={{
+                        padding: '8px',
+                        textAlign: 'center',
+                      }}
+                    >
+                      {invoice.months?.[month] ? (
+                        <button
+                          onClick={() => downloadFile(invoice.months![month], `${invoice.nome_uc}-${month}.pdf`)}
+                          disabled={isDownloading}
+                          style={{
+                            backgroundColor: '#388e3c',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
+                            padding: '6px 10px',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <FontAwesomeIcon icon={faFilePdf} />
+                        </button>
+                      ) : (
+                        <span> - </span>
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={15} style={{ padding: '8px', textAlign: 'center' }}>Nenhum item encontrado.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
