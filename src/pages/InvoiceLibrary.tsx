@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { fetchInvoicesSearch } from '../services/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFilePdf, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faFilePdf, faSpinner, faCheck } from '@fortawesome/free-solid-svg-icons';
 
 interface Invoice {
   id: number;
@@ -10,16 +10,17 @@ interface Invoice {
   no_cliente: string;
   distribuidora: string;
   pdf_url: string;
-  // Campo opcional para armazenamento dos PDFs agrupados por mês
   months?: { [key: string]: string };
 }
 
+type TabType = 'consumidores' | 'distribuidoras';
+
 interface Filter {
-  nome_uc: string;
-  distribuidora: string;
+  selectedItems: string[];
 }
 
-// Mapeamento fixo para abreviação dos meses
+const ALL_YEARS = ['2018', '2019', '2020', '2021', '2022', '2023', '2024'];
+
 const monthsMap: { [key: string]: string } = {
   JAN: 'Jan',
   FEV: 'Fev',
@@ -35,13 +36,10 @@ const monthsMap: { [key: string]: string } = {
   DEZ: 'Dez',
 };
 
-// Função para agrupar as faturas por "nome_uc" e armazenar os PDFs por mês
 const groupByNomeUc = (invoices: Invoice[]): Invoice[] => {
   return invoices.reduce((acc: Invoice[], invoice: Invoice) => {
     const [mes] = invoice.mes_referencia.split('/');
     const monthAbbr = monthsMap[mes.toUpperCase()] || mes;
-
-    // Garante que invoice.months seja um objeto vazio se não estiver definido
     invoice.months = invoice.months || {};
 
     const existing = acc.find(item => item.nome_uc === invoice.nome_uc);
@@ -60,61 +58,108 @@ const groupByNomeUc = (invoices: Invoice[]): Invoice[] => {
 
 const InvoicesTable = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [selectedYear, setSelectedYear] = useState('2024');
-  const [filter, setFilter] = useState<Filter>({ nome_uc: '', distribuidora: '' });
+  const [groupedInvoices, setGroupedInvoices] = useState<Invoice[]>([]);
+  const [selectedYear, setSelectedYear] = useState<string>('2024');
+  const [activeTab, setActiveTab] = useState<TabType>('consumidores');
+  const [filter, setFilter] = useState<Filter>({ selectedItems: [] });
+  const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
   const [loadingFile, setLoadingFile] = useState<{ [key: string]: boolean }>({});
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Busca as faturas com base nos filtros e ano selecionado
+  // Busca as faturas com base no ano e filtro
   useEffect(() => {
-    const filterParams = {
-      distribuidora: filter.distribuidora,
-      nome_uc: filter.nome_uc,
-      year: selectedYear,
-    };
+    const filterParams: any = { year: selectedYear };
+
+    if (activeTab === 'consumidores' && filter.selectedItems.length > 0) {
+      filterParams.nome_uc = filter.selectedItems.join(',');
+    }
+    if (activeTab === 'distribuidoras' && filter.selectedItems.length > 0) {
+      filterParams.distribuidora = filter.selectedItems.join(',');
+    }
 
     fetchInvoicesSearch(filterParams)
       .then(fetchedInvoices => {
         setInvoices(fetchedInvoices);
       })
       .catch(err => console.error('Erro ao buscar faturas:', err));
-  }, [filter, selectedYear]);
+  }, [filter, selectedYear, activeTab]);
 
-  // Filtra localmente caso necessário
-  const filteredInvoices = useMemo(() => {
-    return invoices.filter(invoice => {
-      const matchesNomeUC = filter.nome_uc
-        ? invoice.nome_uc.toLowerCase().includes(filter.nome_uc.toLowerCase())
-        : true;
-      const matchesDistribuidora = filter.distribuidora
-        ? invoice.distribuidora.toLowerCase().includes(filter.distribuidora.toLowerCase())
-        : true;
-      return matchesNomeUC && matchesDistribuidora;
+  // Agrupa as faturas
+  const groupedData = useMemo(() => groupByNomeUc(invoices), [invoices]);
+  useEffect(() => {
+    setGroupedInvoices(groupedData);
+  }, [groupedData]);
+
+  // Lista única de itens disponíveis (consumidores ou distribuidoras)
+  const availableItems = useMemo(() => {
+    const itemsSet = new Set<string>();
+    invoices.forEach(inv => {
+      const value = activeTab === 'consumidores' ? inv.nome_uc : inv.distribuidora;
+      if (value) itemsSet.add(value);
     });
-  }, [invoices, filter]);
+    return Array.from(itemsSet);
+  }, [invoices, activeTab]);
 
-  // Agrupa as faturas por Nome UC utilizando useMemo
-  const groupedInvoices = useMemo(() => groupByNomeUc(filteredInvoices), [filteredInvoices]);
+  // Lista de anos disponíveis com base nos registros
+  const availableYears = useMemo(() => {
+    const yearsSet = new Set<string>();
+    invoices.forEach(inv => {
+      const parts = inv.mes_referencia.split('/');
+      if (parts.length >= 2) {
+        yearsSet.add(parts[1]);
+      }
+    });
+    return ALL_YEARS.filter(ano => yearsSet.has(ano));
+  }, [invoices]);
 
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const { name, value } = e.target;
-      setFilter(prev => ({ ...prev, [name]: value }));
-    },
-    []
-  );
+  // Filtra os agrupamentos conforme os itens selecionados; se nenhum for selecionado, mostra todos.
+  const finalGroupedInvoices = useMemo(() => {
+    if (filter.selectedItems.length === 0) return groupedInvoices;
+    return groupedInvoices.filter(invoice => {
+      return activeTab === 'consumidores'
+        ? filter.selectedItems.includes(invoice.nome_uc)
+        : filter.selectedItems.includes(invoice.distribuidora);
+    });
+  }, [groupedInvoices, filter.selectedItems, activeTab]);
+
+  const handleSelectToggle = () => {
+    setDropdownOpen(prev => !prev);
+  };
+
+  // Alterna a seleção do item (clicar no checkbox ou no nome)
+  const toggleSelectedItem = (item: string) => {
+    setFilter(prev => {
+      const alreadySelected = prev.selectedItems.includes(item);
+      if (alreadySelected) {
+        return { selectedItems: prev.selectedItems.filter(i => i !== item) };
+      } else {
+        return { selectedItems: [...prev.selectedItems, item] };
+      }
+    });
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleYearChange = (year: string) => {
+    setSelectedYear(year);
+  };
 
   const downloadFile = async (filePath: string, filename: string) => {
     try {
       setLoadingFile(prev => ({ ...prev, [filename]: true }));
       setIsDownloading(true);
-      console.log(`Iniciando o download do arquivo: ${filePath}`);
-
       if (!filePath || !filePath.startsWith("https://")) {
         throw new Error('URL do arquivo está inválida');
       }
-
-      // Caso precise ajustar o caminho (ajuste conforme necessário)
       let formattedFilePath = filePath;
       if (!filePath.includes("/faturas/")) {
         formattedFilePath = filePath.replace("/faturas/", "/faturas/faturas/");
@@ -138,67 +183,179 @@ const InvoicesTable = () => {
     }
   };
 
-  const handleYearChange = (year: string) => {
-    setSelectedYear(year);
-  };
-
   return (
-    <div className="invoices-page-container">
-      <div className="filters">
-        <div className="filters-left">
-          <input
-            type="text"
-            name="nome_uc"
-            placeholder="Filtrar por Nome da UC"
-            value={filter.nome_uc}
-            onChange={handleInputChange}
-            style={{ marginRight: '20px' }}
-          />
-          <input
-            type="text"
-            name="distribuidora"
-            placeholder="Filtrar por Distribuidora"
-            value={filter.distribuidora}
-            onChange={handleInputChange}
-          />
+    <div className="invoices-page-container" style={{ padding: '20px', color: '#fff' }}>
+      <div
+        className="header"
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '20px',
+        }}
+      >
+        {/* Botões de tab no canto esquerdo */}
+        <div className="tabs" style={{ display: 'flex', gap: '20px' }}>
+          <button
+            onClick={() => {
+              setActiveTab('consumidores');
+              setDropdownOpen(true);
+            }}
+            className={activeTab === 'consumidores' ? 'active' : ''}
+            style={{
+              backgroundColor: activeTab === 'consumidores' ? '#1b5e20' : '#2e7d32',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '8px 16px',
+              cursor: 'pointer',
+            }}
+          >
+            Consumidores
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab('distribuidoras');
+              setDropdownOpen(true);
+            }}
+            className={activeTab === 'distribuidoras' ? 'active' : ''}
+            style={{
+              backgroundColor: activeTab === 'distribuidoras' ? '#1b5e20' : '#2e7d32',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '8px 16px',
+              cursor: 'pointer',
+            }}
+          >
+            Distribuidoras
+          </button>
         </div>
-        <div className="filters-right">
-          <div className="years">
-            <button onClick={() => handleYearChange('2024')}>2024</button>
-          </div>
+        {/* Botões de anos no canto direito */}
+        <div className="years" style={{ display: 'flex', gap: '10px' }}>
+          {availableYears.map(ano => (
+            <button
+              key={ano}
+              onClick={() => handleYearChange(ano)}
+              className={selectedYear === ano ? 'active' : ''}
+              style={{
+                backgroundColor: selectedYear === ano ? '#1b5e20' : '#2e7d32',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '8px 16px',
+                cursor: 'pointer',
+              }}
+            >
+              {ano}
+            </button>
+          ))}
         </div>
       </div>
 
-      <table className="invoices-table">
+      {/* Dropdown overlay para seleção */}
+      {dropdownOpen && (
+        <div
+          className="dropdown"
+          ref={dropdownRef}
+          style={{
+            position: 'absolute',
+            zIndex: 100,
+            background: '#fff',
+            color: '#000',
+            border: '1px solid #ccc',
+            padding: '10px',
+            marginTop: '5px',
+          }}
+        >
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+            {availableItems.map(item => {
+              const checked = filter.selectedItems.includes(item);
+              return (
+                <li
+                  key={item}
+                  onClick={() => toggleSelectedItem(item)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '5px 0',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span>{item}</span>
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={() => toggleSelectedItem(item)}
+                    style={{ cursor: 'pointer', marginLeft: '20px' }}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+          <button
+            onClick={() => setDropdownOpen(false)}
+            style={{
+              marginTop: '5px',
+              backgroundColor: '#2e7d32',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '6px 12px',
+              cursor: 'pointer',
+            }}
+          >
+            Fechar
+          </button>
+        </div>
+      )}
+
+      <table
+        className="invoices-table"
+        style={{
+          width: '100%',
+          borderCollapse: 'collapse',
+          backgroundColor: 'rgba(255,255,255,0.05)',
+        }}
+      >
         <thead>
           <tr>
-            <th>Nome da UC</th>
-            <th>Número da UC</th>
-            <th>Distribuidora</th>
+            <th style={{ padding: '10px', borderBottom: '1px solid #4caf50', textAlign: 'left' }}>NOME DA UC</th>
+            <th style={{ padding: '10px', borderBottom: '1px solid #4caf50', textAlign: 'left' }}>NÚMERO DA UC</th>
+            <th style={{ padding: '10px', borderBottom: '1px solid #4caf50', textAlign: 'left' }}>DISTRIBUIDORA</th>
             {Object.values(monthsMap).map((month, index) => (
-              <th key={index}>{month}</th>
+              <th key={index} style={{ padding: '10px', borderBottom: '1px solid #4caf50', textAlign: 'center' }}>{month}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {groupedInvoices.length > 0 ? (
-            groupedInvoices.map(invoice => (
-              <tr key={invoice.id}>
-                <td>{invoice.nome_uc}</td>
-                <td>{invoice.no_cliente}</td>
-                <td>{invoice.distribuidora}</td>
+          {finalGroupedInvoices.length > 0 ? (
+            finalGroupedInvoices.map(invoice => (
+              <tr key={invoice.id} style={{ borderBottom: '1px solid #4caf50' }}>
+                <td style={{ padding: '8px' }}>{invoice.nome_uc}</td>
+                <td style={{ padding: '8px' }}>{invoice.no_cliente}</td>
+                <td style={{ padding: '8px' }}>{invoice.distribuidora}</td>
                 {Object.values(monthsMap).map((month, index) => (
-                  <td key={index}>
+                  <td key={index} style={{ padding: '8px', textAlign: 'center' }}>
                     {invoice.months?.[month] ? (
                       <button
                         onClick={() => downloadFile(invoice.months![month], `${invoice.nome_uc}-${month}.pdf`)}
                         disabled={isDownloading}
+                        style={{
+                          backgroundColor: '#388e3c',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '4px',
+                          padding: '6px 10px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
                       >
-                        {loadingFile[`${invoice.nome_uc}-${month}.pdf`] ? (
-                          <FontAwesomeIcon icon={faSpinner} spin />
-                        ) : (
-                          <FontAwesomeIcon icon={faFilePdf} />
-                        )}
+                        <FontAwesomeIcon icon={faFilePdf} />
                       </button>
                     ) : (
                       <span> - </span>
@@ -209,7 +366,7 @@ const InvoicesTable = () => {
             ))
           ) : (
             <tr>
-              <td colSpan={15}>Nenhum item encontrado.</td>
+              <td colSpan={15} style={{ padding: '8px', textAlign: 'center' }}>Nenhum item encontrado.</td>
             </tr>
           )}
         </tbody>
