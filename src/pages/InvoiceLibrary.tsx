@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { fetchInvoicesSearch } from '../services/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilePdf, faSpinner } from '@fortawesome/free-solid-svg-icons';
@@ -9,19 +9,63 @@ interface Invoice {
   nome_uc: string;
   no_cliente: string;
   distribuidora: string;
-  download_url: string;
-  months: { [key: string]: string };
   pdf_url: string;
+  // Campo opcional para armazenamento dos PDFs agrupados por mês
+  months?: { [key: string]: string };
 }
+
+interface Filter {
+  nome_uc: string;
+  distribuidora: string;
+}
+
+// Mapeamento fixo para abreviação dos meses
+const monthsMap: { [key: string]: string } = {
+  JAN: 'Jan',
+  FEV: 'Fev',
+  MAR: 'Mar',
+  ABR: 'Abr',
+  MAI: 'Mai',
+  JUN: 'Jun',
+  JUL: 'Jul',
+  AGO: 'Ago',
+  SET: 'Set',
+  OUT: 'Out',
+  NOV: 'Nov',
+  DEZ: 'Dez',
+};
+
+// Função para agrupar as faturas por "nome_uc" e armazenar os PDFs por mês
+const groupByNomeUc = (invoices: Invoice[]): Invoice[] => {
+  return invoices.reduce((acc: Invoice[], invoice: Invoice) => {
+    const [mes] = invoice.mes_referencia.split('/');
+    const monthAbbr = monthsMap[mes.toUpperCase()] || mes;
+
+    // Garante que invoice.months seja um objeto vazio se não estiver definido
+    invoice.months = invoice.months || {};
+
+    const existing = acc.find(item => item.nome_uc === invoice.nome_uc);
+    if (existing) {
+      existing.months = existing.months || {};
+      existing.months[monthAbbr] = invoice.pdf_url;
+    } else {
+      acc.push({
+        ...invoice,
+        months: { [monthAbbr]: invoice.pdf_url },
+      });
+    }
+    return acc;
+  }, []);
+};
 
 const InvoicesTable = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [groupedInvoices, setGroupedInvoices] = useState<Invoice[]>([]);
   const [selectedYear, setSelectedYear] = useState('2024');
-  const [filter, setFilter] = useState({ nome_uc: '', distribuidora: '' });
-  const [loadingFile, setLoadingFile] = useState<{ [key: string]: boolean }>({}); 
-  const [isDownloading, setIsDownloading] = useState<boolean>(false); 
+  const [filter, setFilter] = useState<Filter>({ nome_uc: '', distribuidora: '' });
+  const [loadingFile, setLoadingFile] = useState<{ [key: string]: boolean }>({});
+  const [isDownloading, setIsDownloading] = useState<boolean>(false);
 
+  // Busca as faturas com base nos filtros e ano selecionado
   useEffect(() => {
     const filterParams = {
       distribuidora: filter.distribuidora,
@@ -29,85 +73,56 @@ const InvoicesTable = () => {
       year: selectedYear,
     };
 
-    fetchInvoicesSearch(filterParams).then(fetchedInvoices => {
-      const grouped = groupByNomeUc(fetchedInvoices);
-      setInvoices(fetchedInvoices);
-      setGroupedInvoices(grouped);
-    });
+    fetchInvoicesSearch(filterParams)
+      .then(fetchedInvoices => {
+        setInvoices(fetchedInvoices);
+      })
+      .catch(err => console.error('Erro ao buscar faturas:', err));
   }, [filter, selectedYear]);
 
-  useEffect(() => {
-    if (invoices.length > 0) {
-      const filtered = invoices.filter(invoice => {
-        const matchesNomeUC = filter.nome_uc ? invoice.nome_uc.toLowerCase().includes(filter.nome_uc.toLowerCase()) : true;
-        const matchesDistribuidora = filter.distribuidora ? invoice.distribuidora.toLowerCase().includes(filter.distribuidora.toLowerCase()) : true;
-        return matchesNomeUC && matchesDistribuidora;
-      });
+  // Filtra localmente caso necessário
+  const filteredInvoices = useMemo(() => {
+    return invoices.filter(invoice => {
+      const matchesNomeUC = filter.nome_uc
+        ? invoice.nome_uc.toLowerCase().includes(filter.nome_uc.toLowerCase())
+        : true;
+      const matchesDistribuidora = filter.distribuidora
+        ? invoice.distribuidora.toLowerCase().includes(filter.distribuidora.toLowerCase())
+        : true;
+      return matchesNomeUC && matchesDistribuidora;
+    });
+  }, [invoices, filter]);
 
-      const groupedFiltered = groupByNomeUc(filtered);
-      setGroupedInvoices(groupedFiltered);
-    }
-  }, [filter, invoices]);
-  
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFilter({ ...filter, [name]: value });
-  };
+  // Agrupa as faturas por Nome UC utilizando useMemo
+  const groupedInvoices = useMemo(() => groupByNomeUc(filteredInvoices), [filteredInvoices]);
 
-  const groupByNomeUc = (invoices: Invoice[]): Invoice[] => {
-    return invoices.reduce((acc: Invoice[], invoice: Invoice) => {
-      const [mes] = invoice.mes_referencia.split('/');
-      const monthsMap: { [key: string]: string } = {
-        JAN: 'Jan',
-        FEV: 'Fev',
-        MAR: 'Mar',
-        ABR: 'Abr',
-        MAI: 'Mai',
-        JUN: 'Jun',
-        JUL: 'Jul',
-        AGO: 'Ago',
-        SET: 'Set',
-        OUT: 'Out',
-        NOV: 'Nov',
-        DEZ: 'Dez',
-      };
-      const monthAbbr = monthsMap[mes.toUpperCase()];
-      
-      const existing = acc.find(item => item.nome_uc === invoice.nome_uc);
-
-      if (existing) {
-        existing.months[monthAbbr] = invoice.pdf_url;
-      } else {
-        acc.push({
-          ...invoice,
-          months: { [monthAbbr]: invoice.pdf_url },
-        });
-      }
-
-      return acc;
-    }, []);
-  };
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const { name, value } = e.target;
+      setFilter(prev => ({ ...prev, [name]: value }));
+    },
+    []
+  );
 
   const downloadFile = async (filePath: string, filename: string) => {
     try {
-      setLoadingFile(prev => ({ ...prev, [filename]: true })); 
-      setIsDownloading(true); 
+      setLoadingFile(prev => ({ ...prev, [filename]: true }));
+      setIsDownloading(true);
       console.log(`Iniciando o download do arquivo: ${filePath}`);
-  
+
       if (!filePath || !filePath.startsWith("https://")) {
         throw new Error('URL do arquivo está inválida');
       }
-  
+
+      // Caso precise ajustar o caminho (ajuste conforme necessário)
       let formattedFilePath = filePath;
       if (!filePath.includes("/faturas/")) {
         formattedFilePath = filePath.replace("/faturas/", "/faturas/faturas/");
       }
-      const response = await fetch(`${formattedFilePath}`);
-  
+      const response = await fetch(formattedFilePath);
       if (!response.ok) {
         throw new Error(`Erro no download: ${response.statusText}`);
       }
-  
       const blob = await response.blob();
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
@@ -115,12 +130,11 @@ const InvoicesTable = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-  
     } catch (err) {
       console.error('Erro ao baixar o arquivo:', err);
     } finally {
-      setLoadingFile(prev => ({ ...prev, [filename]: false })); 
-      setIsDownloading(false); 
+      setLoadingFile(prev => ({ ...prev, [filename]: false }));
+      setIsDownloading(false);
     }
   };
 
@@ -138,7 +152,7 @@ const InvoicesTable = () => {
             placeholder="Filtrar por Nome da UC"
             value={filter.nome_uc}
             onChange={handleInputChange}
-            style={{ marginRight: '20px'}}
+            style={{ marginRight: '20px' }}
           />
           <input
             type="text"
@@ -161,7 +175,7 @@ const InvoicesTable = () => {
             <th>Nome da UC</th>
             <th>Número da UC</th>
             <th>Distribuidora</th>
-            {['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'].map((month, index) => (
+            {Object.values(monthsMap).map((month, index) => (
               <th key={index}>{month}</th>
             ))}
           </tr>
@@ -173,12 +187,12 @@ const InvoicesTable = () => {
                 <td>{invoice.nome_uc}</td>
                 <td>{invoice.no_cliente}</td>
                 <td>{invoice.distribuidora}</td>
-                {['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'].map((month, index) => (
+                {Object.values(monthsMap).map((month, index) => (
                   <td key={index}>
-                    {invoice.months[month] ? (
+                    {invoice.months?.[month] ? (
                       <button
-                        onClick={() => downloadFile(invoice.months[month], `${invoice.nome_uc}-${month}.pdf`)}
-                        disabled={isDownloading} 
+                        onClick={() => downloadFile(invoice.months![month], `${invoice.nome_uc}-${month}.pdf`)}
+                        disabled={isDownloading}
                       >
                         {loadingFile[`${invoice.nome_uc}-${month}.pdf`] ? (
                           <FontAwesomeIcon icon={faSpinner} spin />
