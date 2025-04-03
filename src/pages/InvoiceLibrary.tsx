@@ -19,8 +19,8 @@ const InvoicesTable = () => {
   const [groupedInvoices, setGroupedInvoices] = useState<Invoice[]>([]);
   const [selectedYear, setSelectedYear] = useState('2024');
   const [filter, setFilter] = useState({ nome_uc: '', distribuidora: '' });
-  const [loadingFile, setLoadingFile] = useState<{ [key: string]: boolean }>({}); // Estado de loading para cada arquivo
-  const [isDownloading, setIsDownloading] = useState<boolean>(false); // Estado geral de download ativo
+  const [loadingFile, setLoadingFile] = useState<{ [key: string]: boolean }>({}); 
+  const [isDownloading, setIsDownloading] = useState<boolean>(false); 
 
   useEffect(() => {
     const filterParams = {
@@ -90,8 +90,8 @@ const InvoicesTable = () => {
 
   const downloadFile = async (filePath: string, filename: string) => {
     try {
-      setLoadingFile(prev => ({ ...prev, [filename]: true })); // Definir estado de loading para o arquivo atual
-      setIsDownloading(true); // Desabilitar todos os outros botões durante o download
+      setLoadingFile(prev => ({ ...prev, [filename]: true })); 
+      setIsDownloading(true); 
       console.log(`Iniciando o download do arquivo: ${filePath}`);
   
       if (!filePath || !filePath.startsWith("https://")) {
@@ -99,11 +99,10 @@ const InvoicesTable = () => {
       }
   
       let formattedFilePath = filePath;
-      if (!filePath.includes("/faturas/faturas/")) {
+      if (!filePath.includes("/faturas/")) {
         formattedFilePath = filePath.replace("/faturas/", "/faturas/faturas/");
       }
-  
-      const response = await fetch(`${formattedFilePath}.pdf`);
+      const response = await fetch(`${formattedFilePath}`);
   
       if (!response.ok) {
         throw new Error(`Erro no download: ${response.statusText}`);
@@ -120,8 +119,8 @@ const InvoicesTable = () => {
     } catch (err) {
       console.error('Erro ao baixar o arquivo:', err);
     } finally {
-      setLoadingFile(prev => ({ ...prev, [filename]: false })); // Remover estado de loading após o download
-      setIsDownloading(false); // Liberar os downloads após a conclusão
+      setLoadingFile(prev => ({ ...prev, [filename]: false })); 
+      setIsDownloading(false); 
     }
   };
 
@@ -179,7 +178,7 @@ const InvoicesTable = () => {
                     {invoice.months[month] ? (
                       <button
                         onClick={() => downloadFile(invoice.months[month], `${invoice.nome_uc}-${month}.pdf`)}
-                        disabled={isDownloading} // Desabilitar todos os botões durante o download de qualquer arquivo
+                        disabled={isDownloading} 
                       >
                         {loadingFile[`${invoice.nome_uc}-${month}.pdf`] ? (
                           <FontAwesomeIcon icon={faSpinner} spin />

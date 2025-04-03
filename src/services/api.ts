@@ -19,6 +19,20 @@ export const fetchInvoices = async () => {
   }
 };
 
+// Função para buscar dados consolidados do dashboard
+export const fetchDashboardData = async (year: string) => {
+  try {
+    console.log('entrou aqui')
+    const response = await axios.get(`${API_URL}/invoices/dashboard?year=${year}`);
+    console.log(response.data)
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao buscar dados do dashboard:', error);
+    throw error;
+  }
+};
+
+
 // Função para buscar faturas com parâmetros de busca (filtragem)
 export const fetchInvoicesSearch = async (filterParams: any) => {
   try {
