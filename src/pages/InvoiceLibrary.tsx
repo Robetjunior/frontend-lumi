@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { fetchInvoicesSearch } from '../services/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFilePdf, faSpinner, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faFilePdf, faSpinner } from '@fortawesome/free-solid-svg-icons';
 
 interface Invoice {
   id: number;
@@ -21,6 +21,7 @@ interface Filter {
 
 const ALL_YEARS = ['2018', '2019', '2020', '2021', '2022', '2023', '2024'];
 
+// Mapeamento fixo para abreviação dos meses
 const monthsMap: { [key: string]: string } = {
   JAN: 'Jan',
   FEV: 'Fev',
@@ -67,7 +68,6 @@ const InvoicesTable = () => {
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Busca as faturas com base no ano e filtro
   useEffect(() => {
     const filterParams: any = { year: selectedYear };
 
@@ -85,7 +85,6 @@ const InvoicesTable = () => {
       .catch(err => console.error('Erro ao buscar faturas:', err));
   }, [filter, selectedYear, activeTab]);
 
-  // Agrupa as faturas
   const groupedData = useMemo(() => groupByNomeUc(invoices), [invoices]);
   useEffect(() => {
     setGroupedInvoices(groupedData);
@@ -101,7 +100,6 @@ const InvoicesTable = () => {
     return Array.from(itemsSet);
   }, [invoices, activeTab]);
 
-  // Lista de anos disponíveis com base nos registros
   const availableYears = useMemo(() => {
     const yearsSet = new Set<string>();
     invoices.forEach(inv => {
@@ -113,7 +111,6 @@ const InvoicesTable = () => {
     return ALL_YEARS.filter(ano => yearsSet.has(ano));
   }, [invoices]);
 
-  // Filtra os agrupamentos conforme os itens selecionados; se nenhum for selecionado, mostra todos.
   const finalGroupedInvoices = useMemo(() => {
     if (filter.selectedItems.length === 0) return groupedInvoices;
     return groupedInvoices.filter(invoice => {
@@ -127,7 +124,7 @@ const InvoicesTable = () => {
     setDropdownOpen(prev => !prev);
   };
 
-  // Alterna a seleção do item (clicar no checkbox ou no nome)
+  // Função para adicionar/remover item do filtro
   const toggleSelectedItem = (item: string) => {
     setFilter(prev => {
       const alreadySelected = prev.selectedItems.includes(item);
@@ -194,8 +191,7 @@ const InvoicesTable = () => {
           marginBottom: '20px',
         }}
       >
-        {/* Botões de tab no canto esquerdo */}
-        <div className="tabs" style={{ display: 'flex', gap: '20px' }}>
+        <div className="tabs" style={{ display: 'flex', gap: '10px' }}>
           <button
             onClick={() => {
               setActiveTab('consumidores');
@@ -231,6 +227,7 @@ const InvoicesTable = () => {
             Distribuidoras
           </button>
         </div>
+
         {/* Botões de anos no canto direito */}
         <div className="years" style={{ display: 'flex', gap: '10px' }}>
           {availableYears.map(ano => (
@@ -274,7 +271,6 @@ const InvoicesTable = () => {
               return (
                 <li
                   key={item}
-                  onClick={() => toggleSelectedItem(item)}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -282,14 +278,15 @@ const InvoicesTable = () => {
                     padding: '5px 0',
                     cursor: 'pointer',
                   }}
+                  onClick={() => toggleSelectedItem(item)}
                 >
                   <span>{item}</span>
                   <input
                     type="checkbox"
                     checked={checked}
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => e.stopPropagation()} // Evita duplo toggle
                     onChange={() => toggleSelectedItem(item)}
-                    style={{ cursor: 'pointer', marginLeft: '20px' }}
+                    style={{ cursor: 'pointer' }}
                   />
                 </li>
               );
@@ -338,7 +335,13 @@ const InvoicesTable = () => {
                 <td style={{ padding: '8px' }}>{invoice.no_cliente}</td>
                 <td style={{ padding: '8px' }}>{invoice.distribuidora}</td>
                 {Object.values(monthsMap).map((month, index) => (
-                  <td key={index} style={{ padding: '8px', textAlign: 'center' }}>
+                  <td
+                    key={index}
+                    style={{
+                      padding: '8px',
+                      textAlign: 'center',
+                    }}
+                  >
                     {invoice.months?.[month] ? (
                       <button
                         onClick={() => downloadFile(invoice.months![month], `${invoice.nome_uc}-${month}.pdf`)}
@@ -350,9 +353,6 @@ const InvoicesTable = () => {
                           borderRadius: '4px',
                           padding: '6px 10px',
                           cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
                         }}
                       >
                         <FontAwesomeIcon icon={faFilePdf} />
