@@ -226,9 +226,32 @@ footer {
 }
 
 .card h3 {
-    margin-bottom: 5px; /* Reduz o espaço entre o título e o valor */
-    color: #00362b; /* Cor do título do card */
-    font-size: 0.7rem; /* Aumenta o tamanho do título */
+    margin-bottom: 5px;
+    color: var(--main-bg-color); /* Mantém a paleta: cor definida para o fundo principal */
+    font-size: 1rem; /* Aumenta o tamanho da fonte para melhor legibilidade */
+    font-weight: 600; /* Adiciona peso para destacar o título */
+}
+
+.recharts-default-tooltip {
+    background-color: rgba(255, 255, 255, 0.9) !important; /* Fundo claro */
+    color: #00362b !important; /* Texto escuro para contraste */
+    border: 1px solid var(--highlight-color) !important;
+    border-radius: 4px;
+    padding: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+}
+
+.recharts-default-tooltip .recharts-tooltip-label {
+    font-weight: 600;
+    color: #00362b !important; /* Cor do label (ano-mês) */
+}
+
+/* Ajuste para a legenda do Recharts (se necessário) */
+.recharts-legend-wrapper .recharts-legend-item text {
+    fill: var(--text-color) !important; /* Usa a cor de texto principal do tema */
+    font-size: 0.9rem !important;
+    font-weight: 600;
 }
 
 .card p {

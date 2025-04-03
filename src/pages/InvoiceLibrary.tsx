@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { fetchInvoicesSearch } from '../services/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFilePdf, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faFilePdf } from '@fortawesome/free-solid-svg-icons';
 
 interface Invoice {
   id: number;
@@ -21,7 +21,6 @@ interface Filter {
 
 const ALL_YEARS = ['2018', '2019', '2020', '2021', '2022', '2023', '2024'];
 
-// Mapeamento fixo para abreviação dos meses
 const monthsMap: { [key: string]: string } = {
   JAN: 'Jan',
   FEV: 'Fev',
@@ -90,7 +89,6 @@ const InvoicesTable = () => {
     setGroupedInvoices(groupedData);
   }, [groupedData]);
 
-  // Lista única de itens disponíveis (consumidores ou distribuidoras)
   const availableItems = useMemo(() => {
     const itemsSet = new Set<string>();
     invoices.forEach(inv => {
@@ -120,11 +118,6 @@ const InvoicesTable = () => {
     });
   }, [groupedInvoices, filter.selectedItems, activeTab]);
 
-  const handleSelectToggle = () => {
-    setDropdownOpen(prev => !prev);
-  };
-
-  // Função para adicionar/remover item do filtro
   const toggleSelectedItem = (item: string) => {
     setFilter(prev => {
       const alreadySelected = prev.selectedItems.includes(item);
@@ -228,7 +221,6 @@ const InvoicesTable = () => {
           </button>
         </div>
 
-        {/* Botões de anos no canto direito */}
         <div className="years" style={{ display: 'flex', gap: '10px' }}>
           {availableYears.map(ano => (
             <button
@@ -250,7 +242,6 @@ const InvoicesTable = () => {
         </div>
       </div>
 
-      {/* Dropdown overlay para seleção */}
       {dropdownOpen && (
         <div
           className="dropdown"
